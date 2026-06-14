@@ -5,7 +5,7 @@ import forest from "../assets/forest.jpeg";
 const Banner = () => {
   return (
     <section
-      className="relative h-[45vh] bg-cover bg-center bg-fixed"
+      className="relative h-[45vh] bg-cover bg-center bg-scroll md:bg-fixed"
       style={{ backgroundImage: `url(${forest})` }}
     >
       {/* Overlay */}
