@@ -17,18 +17,15 @@
 }
 
 @layer base {
-  html,
-  body,
-  #root {
-    height: 100%;
-  }
-
   /* Smooth in-page navigation; scroll-padding offsets the fixed navbar */
   html {
     scroll-behavior: smooth;
     scroll-padding-top: 6rem;
     /* Clip horizontal overflow at the page level (the slide-in reveals briefly
-       translate elements past the viewport edge on narrow screens). */
+       translate elements past the viewport edge on narrow screens). Note: we
+       deliberately do NOT set height:100% here — that would make <body> a
+       fixed-height scroll container and stop window scroll events (which the
+       navbar relies on to add its background). */
     overflow-x: hidden;
   }
 
