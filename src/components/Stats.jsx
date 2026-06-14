@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Reveal from "./Reveal";
 
 /*
- * TODO: replace these figures with the forum's real numbers.
+ * TODO: replace these figures with the foundation's real numbers.
  * Inspired by the "Divine Works" stat grid on the HariPrabodham family sites.
  */
 const stats = [

@@ -75,7 +75,7 @@ const Footer = () => {
       </Reveal>
 
       <div className="text-center mt-16 text-sm text-mutedBlue">
-        © 2025 HariPrabodham Atmiya Youth Forum Bhandup
+        © 2025 HariPrabodham Atmiya Youth Foundation Bhandup
       </div>
     </footer>
   );

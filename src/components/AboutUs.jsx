@@ -5,7 +5,7 @@ import aboutImage from "../assets/about_1.png";
 
 /*
  * Content modelled on the Hariprabodham Parivar "About Us" page
- * (home.ydscanada.org/about-us.html), adapted to the Bhandup youth forum.
+ * (home.ydscanada.org/about-us.html), adapted to the Bhandup youth foundation.
  * TODO: have the team verify all wording before publishing.
  */
 
@@ -21,7 +21,7 @@ const AboutUs = () => {
               The Hariprabodham Parivar
             </h2>
             <p className="mb-4 text-lg leading-relaxed text-gray-600">
-              HariPrabodham Atmiya Youth Forum, Bhandup is part of the global
+              HariPrabodham Atmiya Youth Foundation, Bhandup is part of the global
               Hariprabodham Parivar &mdash; created through the vision and
               blessings of His Divine Holiness Guruhari Hariprasad Swamiji
               Maharaj, and guided today by His Divine Holiness Pragat Guruhari

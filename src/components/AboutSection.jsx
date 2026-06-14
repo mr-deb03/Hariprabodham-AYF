@@ -24,7 +24,7 @@ export default function AboutSection() {
 
             <p className="text-lg leading-relaxed text-white/90">
               <span className="font-semibold">
-                HariPrabodham Atmiya Youth Forum
+                HariPrabodham Atmiya Youth Foundation
               </span>{" "}
               is a Hindu spiritual and humanitarian organization founded on the principles of 
               Akshar–Purushottam Upasana. Inspired by devotion to Lord Swaminarayan, the organization 

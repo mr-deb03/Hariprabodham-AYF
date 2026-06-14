@@ -13,7 +13,7 @@ import Reveal from "./Reveal";
 
 /*
  * Activity categories modelled on the Hariprabodham Parivar about page.
- * TODO: confirm which of these the Bhandup forum actively runs.
+ * TODO: confirm which of these the Bhandup foundation actively runs.
  */
 const activities = [
   {
