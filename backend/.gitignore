@@ -1,0 +1,12 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Secrets — never commit
+.env
+service-account.json
+
+# Runtime data
+album_cache/
+*.pkl

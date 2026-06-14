@@ -1,13 +1,173 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ivory: #fff8f0;
+  --cream: #f8f3e8;
+  --sand: #f5e6c8;
+  --gold: #d4af37;
+  --saffron: #e08a1e;
+  --maroon: #7a2e2e;
+  --bronze: #a97142;
+  --ink: #2b2b2b;
+  --text-soft: #5e5e5e;
+  --text-muted: #757575;
+  --on-dark: #faf8f5;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  /* Smooth in-page navigation; scroll-padding offsets the fixed navbar */
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
+  }
+
+  body {
+    margin: 0;
+    /* Keep slide-in reveals from briefly spawning a horizontal scrollbar */
+    overflow-x: hidden;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.75;
+    color: var(--ink);
+    background-color: var(--ivory);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Cormorant Garamond", Georgia, serif;
+    color: var(--maroon);
+    font-weight: 600;
+    line-height: 1.15;
+  }
+
+  ::selection {
+    background: rgba(212, 175, 55, 0.25);
+    color: var(--maroon);
+  }
+}
+
+@layer components {
+  /* Small uppercase accent label above headings */
+  .eyebrow {
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    color: var(--bronze);
+  }
+
+  /* Buttons */
+  .btn-primary,
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 14px;
+    padding: 0.875rem 1.75rem;
+    font-family: "Inter", system-ui, sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-primary {
+    background-color: var(--gold);
+    color: var(--ink);
+    box-shadow: 0 12px 28px rgba(212, 175, 55, 0.25);
+  }
+  .btn-primary:hover {
+    transform: translateY(-3px);
+    background-color: #c19b2e;
+    box-shadow: 0 16px 36px rgba(212, 175, 55, 0.4);
+  }
+
+  .btn-secondary {
+    background-color: transparent;
+    color: var(--maroon);
+    border: 2px solid var(--gold);
+  }
+  .btn-secondary:hover {
+    transform: translateY(-3px);
+    background-color: rgba(212, 175, 55, 0.15);
+  }
+
+  /* Elevated content card */
+  .card {
+    border-radius: 1.5rem;
+    background-color: #ffffff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Frosted glass surface (use sparingly) */
+  .glass {
+    background: rgba(255, 255, 255, 0.65);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+  }
+}
+
+/* Parampara tabbed-panel transition */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-panel {
+  animation: fadeSlideIn 0.5s ease both;
+}
+
+/* Hero floating particles */
+.particle {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(212, 175, 55, 0.55),
+    rgba(212, 175, 55, 0)
+  );
+  animation: floaty 9s ease-in-out infinite;
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-panel,
+  .particle,
+  .animate-fadeUp,
+  .animate-floaty {
+    animation: none !important;
+  }
 }

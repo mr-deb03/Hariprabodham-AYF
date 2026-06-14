@@ -1,0 +1,13 @@
+{
+  // Tailwind uses @tailwind / @apply / @layer directives that VS Code's built-in
+  // CSS linter doesn't recognize. Silence those false "unknown at rule" warnings.
+  "css.lint.unknownAtRules": "ignore",
+  "scss.lint.unknownAtRules": "ignore",
+  "less.lint.unknownAtRules": "ignore",
+
+  // Treat Tailwind-flavored CSS files as the tailwindcss language when the
+  // Tailwind CSS IntelliSense extension is installed.
+  "files.associations": {
+    "*.css": "tailwindcss"
+  }
+}
