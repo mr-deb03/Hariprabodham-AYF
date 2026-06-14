@@ -27,11 +27,19 @@
   html {
     scroll-behavior: smooth;
     scroll-padding-top: 6rem;
+    /* Clip horizontal overflow at the page level (the slide-in reveals briefly
+       translate elements past the viewport edge on narrow screens). */
+    overflow-x: hidden;
+  }
+
+  html,
+  body,
+  #root {
+    max-width: 100%;
   }
 
   body {
     margin: 0;
-    /* Keep slide-in reveals from briefly spawning a horizontal scrollbar */
     overflow-x: hidden;
     font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
       "Helvetica Neue", Arial, sans-serif;
