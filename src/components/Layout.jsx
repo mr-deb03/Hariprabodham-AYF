@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
@@ -11,7 +11,10 @@ export default function Layout() {
       <ScrollManager />
       <Navbar />
       <main>
-        <Outlet />
+        {/* Lazy-loaded pages stream in here; chrome stays put meanwhile. */}
+        <Suspense fallback={<div className="min-h-[60vh]" />}>
+          <Outlet />
+        </Suspense>
       </main>
       <Footer />
     </>

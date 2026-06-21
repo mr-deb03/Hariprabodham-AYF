@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import Reveal from "./Reveal";
-import swaminarayanImg from "../assets/parampara/swaminarayan-bhagwan.png";
-import gunatitanandImg from "../assets/parampara/gunatitanand-swami.png";
-import shastrijiImg from "../assets/parampara/shastriji-maharaj.png";
-import yogijiImg from "../assets/parampara/yogiji-maharaj.png";
-import hariprasadImg from "../assets/parampara/hariprasad-swamiji.png";
-import prabodhImg from "../assets/parampara/prabodh-swamiji.png";
+import swaminarayanImg from "../assets/parampara/swaminarayan-bhagwan.webp";
+import gunatitanandImg from "../assets/parampara/gunatitanand-swami.webp";
+import shastrijiImg from "../assets/parampara/shastriji-maharaj.webp";
+import yogijiImg from "../assets/parampara/yogiji-maharaj.webp";
+import hariprasadImg from "../assets/parampara/hariprasad-swamiji.webp";
+import prabodhImg from "../assets/parampara/prabodh-swamiji.webp";
 
 /*
  * Guru lineage modelled on the Yogi Divine Society "Parampara" page.

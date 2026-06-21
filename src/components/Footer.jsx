@@ -1,7 +1,7 @@
 import React from "react";
 import { FaFacebookF, FaInstagram, FaYoutube, FaLinkedinIn } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
-import logo from "../assets/HPAYF logo.png";
+import logo from "../assets/HPAYF logo.webp";
 import Reveal from "./Reveal";
 
 const Footer = () => {

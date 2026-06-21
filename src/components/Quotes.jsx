@@ -1,5 +1,6 @@
 import React from "react";
 import Reveal from "./Reveal";
+import Tilt from "./Tilt";
 
 /*
  * TODO: replace with authentic, verified quotes (and confirm attributions)
@@ -28,21 +29,23 @@ const Quotes = () => {
             key={quote.author}
             variant={index % 2 === 0 ? "left" : "right"}
             delay={index * 120}
-            as="figure"
-            className="glass relative rounded-3xl p-10 shadow-soft"
+            className="h-full"
           >
-            <span
-              aria-hidden="true"
-              className="absolute left-6 top-2 font-display text-7xl leading-none text-gold/40"
-            >
-              &ldquo;
-            </span>
-            <blockquote className="relative z-10 text-lg italic leading-relaxed text-gray-700 md:text-xl">
-              {quote.text}
-            </blockquote>
-            <figcaption className="mt-6 text-sm font-semibold tracking-wide text-primaryBrown">
-              — {quote.author}
-            </figcaption>
+            <Tilt className="glass relative h-full rounded-3xl p-10 shadow-soft transition-shadow duration-300 hover:shadow-card">
+
+              <span
+                aria-hidden="true"
+                className="absolute left-6 top-2 font-display text-7xl leading-none text-gold/40"
+              >
+                &ldquo;
+              </span>
+              <blockquote className="relative z-10 text-lg italic leading-relaxed text-gray-700 md:text-xl">
+                {quote.text}
+              </blockquote>
+              <figcaption className="mt-6 text-sm font-semibold tracking-wide text-primaryBrown">
+                — {quote.author}
+              </figcaption>
+            </Tilt>
           </Reveal>
         ))}
       </div>

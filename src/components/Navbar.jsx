@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import HPAYGLogo from "../assets/HPAYF logo.png";
+import HPAYGLogo from "../assets/HPAYF logo.webp";
 
 const leftLinks = [
   { label: "Home", to: "/" },

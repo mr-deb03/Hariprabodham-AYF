@@ -1,7 +1,7 @@
 import React from "react";
 import { FaBullseye, FaEye } from "react-icons/fa";
 import Reveal from "./Reveal";
-import aboutImage from "../assets/about_1.png";
+import aboutImage from "../assets/about_1.webp";
 
 /*
  * Content modelled on the Hariprabodham Parivar "About Us" page

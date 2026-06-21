@@ -1,6 +1,7 @@
 import React from "react";
 import Reveal from "./Reveal";
-import logo from "../assets/HPAYF logo.png";
+import Tilt from "./Tilt";
+import logo from "../assets/HPAYF logo.webp";
 import seva from "../assets/seva.png";
 import smruti from "../assets/smruti.png";
 import suhradbhav from "../assets/suhradbhav.png";
@@ -92,7 +93,9 @@ const FourPillars = () => {
               delay={index * 100}
               className="w-full max-w-[420px]"
             >
-              <PillarCard pillar={pillar} className="w-full" />
+              <Tilt className="w-full">
+                <PillarCard pillar={pillar} className="w-full" />
+              </Tilt>
             </Reveal>
           ))}
         </div>

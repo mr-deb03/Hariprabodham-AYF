@@ -10,6 +10,7 @@ import {
   FaChild,
 } from "react-icons/fa";
 import Reveal from "./Reveal";
+import Tilt from "./Tilt";
 
 /*
  * Activity categories modelled on the Hariprabodham Parivar about page.
@@ -77,17 +78,19 @@ const Activities = () => {
                 key={item.title}
                 variant="zoom"
                 delay={(index % 4) * 100}
-                className="group h-full rounded-2xl border border-gray-100 bg-softGray p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                className="group h-full"
               >
-                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-primaryBrown/10 text-2xl text-primaryBrown transition-colors duration-300 group-hover:bg-primaryBrown group-hover:text-white">
-                  <Icon />
-                </div>
-                <h3 className="mb-3 text-lg font-semibold text-primaryBrown">
-                  {item.title}
-                </h3>
-                <p className="text-sm leading-relaxed text-gray-600">
-                  {item.text}
-                </p>
+                <Tilt className="h-full rounded-2xl border border-gray-100 bg-softGray p-8 shadow-sm transition-shadow duration-300 hover:shadow-xl">
+                  <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-primaryBrown/10 text-2xl text-primaryBrown transition-colors duration-300 group-hover:bg-primaryBrown group-hover:text-white">
+                    <Icon />
+                  </div>
+                  <h3 className="mb-3 text-lg font-semibold text-primaryBrown">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-gray-600">
+                    {item.text}
+                  </p>
+                </Tilt>
               </Reveal>
             );
           })}

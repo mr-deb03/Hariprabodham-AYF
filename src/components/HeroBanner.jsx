@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import banner1 from "../assets/banner_3_1.png";
-import banner2 from "../assets/banner_3_2.jpg";
-import banner3 from "../assets/banner_3_3.png";
-import banner4 from "../assets/banner_3_4.jpg";
-import banner5 from "../assets/banner_3_5.png";
-import banner6 from "../assets/banner_3_6.png";
+import banner1 from "../assets/banner_3_1.webp";
+import banner2 from "../assets/banner_3_2.webp";
+import banner3 from "../assets/banner_3_3.webp";
+import banner4 from "../assets/banner_3_4.webp";
+import banner5 from "../assets/banner_3_5.webp";
+import banner6 from "../assets/banner_3_6.webp";
 
 // Hero slides — cycle automatically, no controls or indicators.
 const slides = [banner1, banner2, banner3, banner4, banner5, banner6];
@@ -12,8 +12,12 @@ const SLIDE_INTERVAL = 5000; // ms
 
 export default function HeroBanner() {
   const [index, setIndex] = useState(0);
+  // Defer downloading slides 2-6 until after first paint so the first
+  // (above-the-fold) image loads first instead of competing with the rest.
+  const [loadRest, setLoadRest] = useState(false);
 
   useEffect(() => {
+    setLoadRest(true);
     const id = setInterval(() => {
       setIndex((i) => (i + 1) % slides.length);
     }, SLIDE_INTERVAL);
@@ -26,9 +30,12 @@ export default function HeroBanner() {
       {slides.map((src, i) => (
         <img
           key={i}
-          src={src}
+          src={i === 0 || loadRest ? src : undefined}
           alt="His Divine Holiness Pragat Guruhari Prabodh Swamiji Maharaj"
           aria-hidden={i === index ? undefined : "true"}
+          loading={i === 0 ? "eager" : "lazy"}
+          fetchPriority={i === 0 ? "high" : "low"}
+          decoding="async"
           className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-1000 ease-in-out motion-reduce:transition-none ${
             i === index ? "opacity-100" : "opacity-0"
           }`}

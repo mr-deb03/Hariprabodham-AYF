@@ -1,11 +1,14 @@
+import { lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
-import About from "./pages/About";
-import Parampara from "./pages/Parampara";
-import EventsPage from "./pages/Events";
-import Smruti from "./pages/Smruti";
-import Contact from "./pages/Contact";
+
+// Code-split the secondary pages so the landing page ships less JS upfront.
+const About = lazy(() => import("./pages/About"));
+const Parampara = lazy(() => import("./pages/Parampara"));
+const EventsPage = lazy(() => import("./pages/Events"));
+const Smruti = lazy(() => import("./pages/Smruti"));
+const Contact = lazy(() => import("./pages/Contact"));
 
 function App() {
   return (

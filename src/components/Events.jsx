@@ -1,12 +1,13 @@
 import React from "react";
 import Reveal from "./Reveal";
+import Tilt from "./Tilt";
 
 // TODO: swap these placeholder images for real event photos.
-import img1 from "../assets/diff-1.png";
-import img2 from "../assets/diff-2.png";
-import img3 from "../assets/diff-3.png";
-import img4 from "../assets/about_1.png";
-import img5 from "../assets/about-photo.png";
+import img1 from "../assets/diff-1.webp";
+import img2 from "../assets/diff-2.webp";
+import img3 from "../assets/diff-3.webp";
+import img4 from "../assets/about_1.webp";
+import img5 from "../assets/about-photo.webp";
 import img6 from "../assets/forest.jpeg";
 
 const events = [
@@ -28,8 +29,8 @@ const Events = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
         {events.map((event, index) => (
-          <Reveal key={event.title} variant="zoom" delay={index * 100} className="group">
-            <article className="h-full overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
+          <Reveal key={event.title} variant="zoom" delay={index * 100} className="group h-full">
+            <Tilt className="h-full overflow-hidden rounded-2xl bg-white shadow-lg hover:shadow-2xl">
               <div className="relative h-52 overflow-hidden">
                 <img
                   src={event.image}
@@ -46,7 +47,7 @@ const Events = () => {
                   {event.title}
                 </h3>
               </div>
-            </article>
+            </Tilt>
           </Reveal>
         ))}
       </div>

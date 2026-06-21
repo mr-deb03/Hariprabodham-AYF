@@ -1,8 +1,9 @@
 import React from "react";
-import img1 from "../assets/diff-1.png";
-import img2 from "../assets/diff-2.png";
-import img3 from "../assets/diff-3.png";
+import img1 from "../assets/diff-1.webp";
+import img2 from "../assets/diff-2.webp";
+import img3 from "../assets/diff-3.webp";
 import Reveal from "./Reveal";
+import Tilt from "./Tilt";
 
 export default function DifferenceSection() {
   return (
@@ -81,12 +82,14 @@ export default function DifferenceSection() {
 /* Reusable image card */
 function ImageCard({ src, alt }) {
   return (
-    <div className="rounded-2xl overflow-hidden shadow-xl w-full max-w-[400px]">
+    <Tilt className="rounded-2xl overflow-hidden shadow-xl w-full max-w-[400px] transition-shadow duration-300 hover:shadow-2xl">
       <img
         src={src}
         alt={alt}
+        loading="lazy"
+        decoding="async"
         className="w-full h-full object-cover"
       />
-    </div>
+    </Tilt>
   );
 }

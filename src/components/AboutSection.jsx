@@ -1,6 +1,6 @@
 import React from "react";
-import aboutBg from "../assets/about-bg.png";
-import aboutImage from "../assets/about-photo.png";
+import aboutBg from "../assets/about-bg.webp";
+import aboutImage from "../assets/about-photo.webp";
 import Reveal from "./Reveal";
 
 export default function AboutSection() {
@@ -52,6 +52,8 @@ export default function AboutSection() {
               <img
                 src={aboutImage}
                 alt="Spiritual guidance"
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover"
               />
             </div>

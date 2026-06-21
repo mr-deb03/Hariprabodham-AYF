@@ -79,7 +79,7 @@ export default function Reveal({
     <Tag
       ref={ref}
       style={delay ? { transitionDelay: `${delay}ms` } : undefined}
-      className={`transition-all duration-[800ms] ease-out will-change-transform motion-reduce:transition-none ${
+      className={`transition-[transform,opacity] duration-[800ms] ease-out will-change-transform motion-reduce:transition-none ${
         visible ? VISIBLE : hidden
       } ${className}`}
       {...rest}
