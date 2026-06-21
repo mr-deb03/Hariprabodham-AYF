@@ -14,10 +14,15 @@ def _client() -> Client:
 
 
 def _to(number: str) -> str:
+    """Normalize a user-entered number into Twilio's `whatsapp:+E.164` format."""
     number = number.strip().replace(" ", "").replace("-", "")
-    if not number.startswith("whatsapp:"):
-        number = "whatsapp:" + number
-    return number
+    if number.startswith("whatsapp:"):
+        number = number[len("whatsapp:") :]
+    if not number.startswith("+"):
+        # A bare 10-digit number is a local Indian mobile → assume +91;
+        # otherwise the user typed the country code without the leading +.
+        number = ("+91" + number) if len(number) == 10 else ("+" + number)
+    return "whatsapp:" + number
 
 
 def send_text(to_number: str, body: str):
