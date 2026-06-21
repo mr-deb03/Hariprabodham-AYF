@@ -1,4 +1,4 @@
-# Smruti backend — Python 3.9–3.11 recommended (DeepFace/TensorFlow compatibility).
+# Smruti backend — Python 3.10 / 3.11 recommended.
 fastapi
 uvicorn[standard]
 python-multipart          # multipart/form-data (file uploads)
@@ -8,9 +8,12 @@ python-dotenv
 google-api-python-client
 google-auth
 
-# Face recognition (local). Pulls in TensorFlow + OpenCV on first install.
-deepface
-tf-keras                  # required by DeepFace on TensorFlow >= 2.16
+# Face recognition — InsightFace on onnxruntime (CPU). Light enough for
+# managed hosting; far smaller footprint than TensorFlow-based stacks.
+insightface
+onnxruntime
+opencv-python-headless
+numpy
 
 # WhatsApp
 twilio

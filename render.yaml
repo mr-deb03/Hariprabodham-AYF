@@ -1,0 +1,35 @@
+# Render Blueprint for the Smruti backend (Python). The React frontend stays on
+# Vercel; this deploys ONLY the backend from the backend/ folder.
+# Deploy: Render Dashboard → New → Blueprint → pick this repo, then fill the
+# secret env vars below (marked sync:false).
+services:
+  - type: web
+    name: smruti-api
+    runtime: docker
+    rootDir: backend
+    plan: standard # buffalo_l needs ~1-2GB RAM. To use a cheaper plan, set
+    # FACE_MODEL_PACK=buffalo_s and lower this to "starter".
+    healthCheckPath: /health
+    autoDeploy: true
+    disk:
+      name: album-cache
+      mountPath: /app/album_cache
+      sizeGB: 1
+    envVars:
+      - key: DRIVE_FOLDER_ID
+        sync: false # your Drive photo-folder ID
+      - key: GOOGLE_CREDENTIALS_JSON
+        sync: false # paste the FULL service-account JSON
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_WHATSAPP_FROM
+        value: "whatsapp:+14155238886" # Twilio sandbox sender (change in prod)
+      - key: CORS_ORIGINS
+        sync: false # e.g. https://your-site.vercel.app,http://localhost:3000
+      - key: FACE_MODEL_PACK
+        value: "buffalo_l"
+      - key: MATCH_THRESHOLD
+        value: "0.35"
+      # PUBLIC_BASE_URL is auto-detected from Render's RENDER_EXTERNAL_URL.

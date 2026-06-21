@@ -1,12 +1,13 @@
 """Smruti API — receives the form, matches faces against the Drive album,
 and sends matched photos to the visitor's WhatsApp.
 
-Run:  uvicorn app:app --reload --port 8000
+Run locally:  uvicorn app:app --reload --port 8000
 """
 import os
 import shutil
 import tempfile
 
+import cv2
 from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -27,8 +28,10 @@ app.add_middleware(
 )
 
 os.makedirs(settings.album_cache_dir, exist_ok=True)
-# Matched photos are served from here so Twilio can fetch them for WhatsApp.
+# Matched (resized) photos are served from here so Twilio can fetch them.
 app.mount("/media", StaticFiles(directory=settings.album_cache_dir), name="media")
+
+SEND_DIR = "_send"  # resized, WhatsApp-friendly copies live under album_cache/_send
 
 
 @app.get("/health")
@@ -41,24 +44,46 @@ def _chunks(items, size):
         yield items[i : i + size]
 
 
+def _prepare_for_send(src_path):
+    """Resize a matched image to a WhatsApp-friendly JPEG (Twilio caps media
+    around 5 MB). Returns the public URL, or None on failure."""
+    send_dir = os.path.join(settings.album_cache_dir, SEND_DIR)
+    os.makedirs(send_dir, exist_ok=True)
+    base = os.path.splitext(os.path.basename(src_path))[0] + ".jpg"
+    out = os.path.join(send_dir, base)
+    if not os.path.exists(out):
+        img = cv2.imread(src_path)
+        if img is None:
+            return None
+        h, w = img.shape[:2]
+        scale = min(1.0, 1600 / max(h, w))
+        if scale < 1.0:
+            img = cv2.resize(
+                img, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA
+            )
+        cv2.imwrite(out, img, [cv2.IMWRITE_JPEG_QUALITY, 85])
+    return f"{settings.public_base_url}/media/{SEND_DIR}/{base}"
+
+
 def process_request(first_name: str, number: str, selfie_path: str):
     """Sync album → match faces → send on WhatsApp. Runs in the background."""
     try:
+        print(f"[smruti] syncing album for {first_name} ({number})")
         drive.sync_album(settings.album_cache_dir)
         matches = matcher.find_matches(selfie_path, settings.album_cache_dir)
         matches = matches[: settings.max_photos_to_send]
+        print(f"[smruti] {len(matches)} match(es) found")
 
         if not matches:
             wa.send_text(
                 number,
                 f"Hi {first_name}, we couldn't find any photos matching your face "
-                "yet. We'll keep looking as new albums are added. 🙏",
+                "yet. Please make sure your photo has a clear, front-facing face — "
+                "we'll also keep looking as new albums are added. 🙏",
             )
             return
 
-        urls = [
-            f"{settings.public_base_url}/media/{os.path.basename(p)}" for p in matches
-        ]
+        urls = [u for u in (_prepare_for_send(p) for p in matches) if u]
         wa.send_text(
             number,
             f"Hi {first_name}! We found {len(urls)} photo(s) of you from our "
@@ -66,8 +91,9 @@ def process_request(first_name: str, number: str, selfie_path: str):
         )
         for chunk in _chunks(urls, 10):  # Twilio: max 10 media per message
             wa.send_media(number, chunk)
+        print(f"[smruti] sent {len(urls)} photo(s) to {number}")
     except Exception as exc:  # noqa: BLE001
-        print("Smruti processing error:", exc)
+        print("[smruti] processing error:", exc)
     finally:
         # Don't retain the biometric source image once we're done with it.
         shutil.rmtree(os.path.dirname(selfie_path), ignore_errors=True)

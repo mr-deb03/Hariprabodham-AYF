@@ -1,8 +1,10 @@
 """Google Drive access: list and download event-album images.
 
-Uses a service account (server-to-server, no interactive login). Share the
-Drive folder with the service account's email so it can read the photos.
+Uses a service account. Share the Drive folder with the service account's
+email so it can read the photos. Credentials come from either the
+GOOGLE_CREDENTIALS_JSON env var (managed hosting) or a JSON file (local dev).
 """
+import json
 import os
 
 from google.oauth2 import service_account
@@ -14,11 +16,17 @@ from config import settings
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 
 
-def _service():
-    creds = service_account.Credentials.from_service_account_file(
+def _credentials():
+    if settings.google_credentials_json.strip():
+        info = json.loads(settings.google_credentials_json)
+        return service_account.Credentials.from_service_account_info(info, scopes=SCOPES)
+    return service_account.Credentials.from_service_account_file(
         settings.google_credentials_file, scopes=SCOPES
     )
-    return build("drive", "v3", credentials=creds, cache_discovery=False)
+
+
+def _service():
+    return build("drive", "v3", credentials=_credentials(), cache_discovery=False)
 
 
 def list_album_images():
@@ -51,11 +59,8 @@ def list_album_images():
 
 
 def sync_album(cache_dir: str):
-    """Download any album images not already cached locally.
-
-    Returns a list of file metadata dicts, each with an added ``local_path``.
-    Only new files are downloaded, so repeat calls are cheap.
-    """
+    """Download album images not already cached locally. Only new files are
+    fetched, so repeat calls are cheap. Returns metadata with ``local_path``."""
     os.makedirs(cache_dir, exist_ok=True)
     service = _service()
     result = []

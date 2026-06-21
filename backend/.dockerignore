@@ -1,0 +1,9 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+service-account.json
+album_cache/
+*.pkl
+README.md
