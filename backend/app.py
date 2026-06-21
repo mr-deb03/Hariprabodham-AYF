@@ -86,7 +86,8 @@ def process_request(first_name: str, number: str, selfie_path: str):
         urls = [u for u in (_prepare_for_send(p) for p in matches) if u]
         wa.send_text(
             number,
-            f"Hi {first_name}! We found {len(urls)} photo(s) of you from our "
+            f"Hi {first_name}! Jai Swaminarayan Das Na Das\n"
+            f"We found {len(urls)} photo(s) of you from our "
             "gatherings. Sending them now 🙏",
         )
         for chunk in _chunks(urls, 10):  # Twilio: max 10 media per message
