@@ -32,10 +32,12 @@ class Settings:
     )
 
     # --- App ---
-    # Public URL Twilio fetches matched images from. On Render this is auto-set
-    # from RENDER_EXTERNAL_URL; override with PUBLIC_BASE_URL for other hosts.
+    # Public URL Twilio fetches matched images from. Auto-detected on Hugging
+    # Face Spaces (SPACE_HOST) and Render (RENDER_EXTERNAL_URL); override with
+    # PUBLIC_BASE_URL for any other host.
     public_base_url: str = (
         os.getenv("PUBLIC_BASE_URL")
+        or (f"https://{os.getenv('SPACE_HOST')}" if os.getenv("SPACE_HOST") else None)
         or os.getenv("RENDER_EXTERNAL_URL")
         or "http://localhost:8000"
     )

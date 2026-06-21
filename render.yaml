@@ -13,7 +13,7 @@ services:
     autoDeploy: true
     disk:
       name: album-cache
-      mountPath: /app/album_cache
+      mountPath: /home/user/app/album_cache
       sizeGB: 1
     envVars:
       - key: DRIVE_FOLDER_ID
