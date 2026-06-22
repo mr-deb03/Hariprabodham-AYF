@@ -25,7 +25,10 @@ const YOUTUBE_VIDEO_IDS = [
 ];
 
 const INSTAGRAM_POST_URLS = [
-  // "https://www.instagram.com/reel/XXXXXXXXX/",
+  "https://www.instagram.com/reel/DZh_Xu9qTay/",
+  "https://www.instagram.com/reel/DWR2wGfivqb/",
+  "https://www.instagram.com/reel/DUvSA5KEzjL/",
+  "https://www.instagram.com/reel/DUiPKn1E_zZ/",
 ];
 
 const YOUTUBE_CHANNEL = "https://www.youtube.com/@hariprabodhamayf";
