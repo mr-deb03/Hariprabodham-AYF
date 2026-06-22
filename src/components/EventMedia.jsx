@@ -29,7 +29,6 @@ const INSTAGRAM_POST_URLS = [
   "https://www.instagram.com/reel/DWR2wGfivqb/",
   "https://www.instagram.com/reel/DUvSA5KEzjL/",
   "https://www.instagram.com/reel/DUiPKn1E_zZ/",
-  "https://www.instagram.com/reel/DTX2CgmDSjx/",
   "https://www.instagram.com/reel/DShTJeSCnFR/",
 ];
 
