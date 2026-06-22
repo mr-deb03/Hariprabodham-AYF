@@ -54,21 +54,22 @@ export default function EventMedia() {
   const hasYouTube = YOUTUBE_VIDEO_IDS.length > 0;
   const hasInstagram = INSTAGRAM_POST_URLS.length > 0;
 
-  // Load Instagram's embed script once, then let it render the blockquotes.
+  // Load Instagram's embed script, then render the blockquotes. When several
+  // embeds are on one page IG often renders only some on the first pass, so we
+  // nudge it to (re)process a few times until all of them resolve.
   useEffect(() => {
     if (!hasInstagram) return;
     const SRC = "https://www.instagram.com/embed.js";
-    const render = () => window.instgrm && window.instgrm.Embeds.process();
-    const existing = document.querySelector(`script[src="${SRC}"]`);
-    if (existing) {
-      render();
-      return;
+    const process = () => window.instgrm && window.instgrm.Embeds.process();
+    if (!document.querySelector(`script[src="${SRC}"]`)) {
+      const script = document.createElement("script");
+      script.src = SRC;
+      script.async = true;
+      script.onload = process;
+      document.body.appendChild(script);
     }
-    const script = document.createElement("script");
-    script.src = SRC;
-    script.async = true;
-    script.onload = render;
-    document.body.appendChild(script);
+    const timers = [300, 1200, 3000].map((delay) => setTimeout(process, delay));
+    return () => timers.forEach(clearTimeout);
   }, [hasInstagram]);
 
   return (
