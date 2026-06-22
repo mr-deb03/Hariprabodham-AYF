@@ -1,6 +1,5 @@
 import React from "react";
-import { FaFacebookF, FaInstagram, FaYoutube, FaLinkedinIn } from "react-icons/fa";
-import { FaXTwitter } from "react-icons/fa6";
+import { FaInstagram, FaYoutube } from "react-icons/fa";
 import logo from "../assets/HPAYF logo.webp";
 import Reveal from "./Reveal";
 
@@ -51,22 +50,12 @@ const Footer = () => {
               Find us on Social Media:
             </h4>
 
-            {/* TODO: replace these base URLs with the org's actual social pages */}
             <div className="flex gap-5 text-xl text-primaryBrown">
-              <a href="https://www.facebook.com" aria-label="Facebook" target="_blank" rel="noopener noreferrer" className="hover:text-black">
-                <FaFacebookF />
-              </a>
-              <a href="https://www.instagram.com" aria-label="Instagram" target="_blank" rel="noopener noreferrer" className="hover:text-black">
+              <a href="https://www.instagram.com/hariprabodhamayf" aria-label="Instagram" target="_blank" rel="noopener noreferrer" className="hover:text-black">
                 <FaInstagram />
               </a>
-              <a href="https://www.youtube.com" aria-label="YouTube" target="_blank" rel="noopener noreferrer" className="hover:text-black">
+              <a href="https://www.youtube.com/@hariprabodhamayf" aria-label="YouTube" target="_blank" rel="noopener noreferrer" className="hover:text-black">
                 <FaYoutube />
-              </a>
-              <a href="https://x.com" aria-label="X (Twitter)" target="_blank" rel="noopener noreferrer" className="hover:text-black">
-                <FaXTwitter />
-              </a>
-              <a href="https://www.linkedin.com" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer" className="hover:text-black">
-                <FaLinkedinIn />
               </a>
             </div>
           </div>

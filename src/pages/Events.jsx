@@ -1,6 +1,7 @@
 import React from "react";
 import PageHeader from "../components/PageHeader";
 import Events from "../components/Events";
+import EventMedia from "../components/EventMedia";
 
 export default function EventsPage() {
   return (
@@ -11,6 +12,7 @@ export default function EventsPage() {
         current="Events"
       />
       <Events />
+      <EventMedia />
     </>
   );
 }
