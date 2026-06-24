@@ -1,6 +1,6 @@
 import React from "react";
 import { FaInstagram, FaYoutube } from "react-icons/fa";
-import logo from "../assets/HPAYF logo.webp";
+import logo from "../assets/common/HPAYF logo.webp";
 import Reveal from "./Reveal";
 
 const Footer = () => {

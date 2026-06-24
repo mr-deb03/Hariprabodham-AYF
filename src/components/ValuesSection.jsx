@@ -1,11 +1,11 @@
 import React from "react";
 import Reveal from "./Reveal";
 import Tilt from "./Tilt";
-import logo from "../assets/HPAYF logo.webp";
-import seva from "../assets/seva.png";
-import smruti from "../assets/smruti.png";
-import suhradbhav from "../assets/suhradbhav.png";
-import swadharma from "../assets/swadharma.png";
+import logo from "../assets/common/HPAYF logo.webp";
+import seva from "../assets/home/seva.png";
+import smruti from "../assets/home/smruti.png";
+import suhradbhav from "../assets/home/suhradbhav.png";
+import swadharma from "../assets/home/swadharma.png";
 
 const pillars = [
   {

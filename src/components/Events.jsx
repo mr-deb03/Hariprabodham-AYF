@@ -3,12 +3,12 @@ import Reveal from "./Reveal";
 import Tilt from "./Tilt";
 
 // TODO: swap these placeholder images for real event photos.
-import img1 from "../assets/diff-1.webp";
-import img2 from "../assets/diff-2.webp";
-import img3 from "../assets/diff-3.webp";
-import img4 from "../assets/about_1.webp";
-import img5 from "../assets/about-photo.webp";
-import img6 from "../assets/forest.jpeg";
+import img1 from "../assets/home/diff-1.webp";
+import img2 from "../assets/home/diff-2.webp";
+import img3 from "../assets/home/diff-3.webp";
+import img4 from "../assets/about/about_1.webp";
+import img5 from "../assets/home/about-photo.webp";
+import img6 from "../assets/home/forest.jpeg";
 
 const events = [
   { title: "Career Workshop", date: "7th July", image: img1 },

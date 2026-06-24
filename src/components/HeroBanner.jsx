@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import banner1 from "../assets/banner_3_1.webp";
-import banner2 from "../assets/banner_3_2.webp";
-import banner3 from "../assets/banner_3_3.webp";
-import banner4 from "../assets/banner_3_4.webp";
-import banner5 from "../assets/banner_3_5.webp";
-import banner6 from "../assets/banner_3_6.webp";
+import banner1 from "../assets/home/banner_3_1.webp";
+import banner2 from "../assets/home/banner_3_2.webp";
+import banner3 from "../assets/home/banner_3_3.webp";
+import banner4 from "../assets/home/banner_3_4.webp";
+import banner5 from "../assets/home/banner_3_5.webp";
+import banner6 from "../assets/home/banner_3_6.webp";
 
 // Hero slides — cycle automatically, no controls or indicators.
 const slides = [banner1, banner2, banner3, banner4, banner5, banner6];

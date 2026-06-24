@@ -1,7 +1,7 @@
 import React from "react";
-import img1 from "../assets/diff-1.webp";
-import img2 from "../assets/diff-2.webp";
-import img3 from "../assets/diff-3.webp";
+import img1 from "../assets/home/diff-1.webp";
+import img2 from "../assets/home/diff-2.webp";
+import img3 from "../assets/home/diff-3.webp";
 import Reveal from "./Reveal";
 import Tilt from "./Tilt";
 

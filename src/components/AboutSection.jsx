@@ -1,6 +1,6 @@
 import React from "react";
-import aboutBg from "../assets/about-bg.webp";
-import aboutImage from "../assets/about-photo.webp";
+import aboutBg from "../assets/home/about-bg.webp";
+import aboutImage from "../assets/home/about-photo.webp";
 import Reveal from "./Reveal";
 
 export default function AboutSection() {

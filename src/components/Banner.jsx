@@ -1,6 +1,6 @@
 import React from "react";
 import Reveal from "./Reveal";
-import forest from "../assets/forest.jpeg";
+import forest from "../assets/home/forest.jpeg";
 
 const Banner = () => {
   return (
