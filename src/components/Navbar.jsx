@@ -9,6 +9,7 @@ const leftLinks = [
 ];
 const rightLinks = [
   { label: "Events", to: "/events" },
+  { label: "Media", to: "/media" },
   { label: "Smruti", to: "/smruti" },
   { label: "Contact", to: "/contact" },
 ];

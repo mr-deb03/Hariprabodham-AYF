@@ -49,7 +49,7 @@ function FollowCard({ href, icon: Icon, label, color }) {
   );
 }
 
-export default function EventMedia() {
+export default function MediaGallery() {
   const hasYouTube = YOUTUBE_VIDEO_IDS.length > 0;
   const hasInstagram = INSTAGRAM_POST_URLS.length > 0;
 
