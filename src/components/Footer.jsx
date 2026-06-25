@@ -3,6 +3,16 @@ import { FaInstagram, FaYoutube } from "react-icons/fa";
 import logo from "../assets/common/HPAYF logo.webp";
 import Reveal from "./Reveal";
 
+const centers = [
+  "Bhandup",
+  "Ghatkopar",
+  "Vikhroli",
+  "Mulund",
+  "Nerul",
+  "Kalyan",
+  "Badlapur",
+];
+
 const Footer = () => {
   return (
     <footer className="bg-softGray py-16 px-6 md:px-20 text-primaryBrown">
@@ -17,22 +27,17 @@ const Footer = () => {
         {/* Middle */}
         <div className="space-y-4 max-w-md">
           <div>
-            <h4 className="font-semibold">Weekly Assembly:</h4>
-            <p className="text-mutedBlue">
-              Monday Youth Gathering: 8:30pm - 10:30pm
-            </p>
-            <p className="text-mutedBlue">
-              Saturday Youth Goshti Sabha meet: 8:30pm - 10:30pm
-            </p>
-          </div>
-
-          <div>
-            <h4 className="font-semibold">
-              Agrawal Next Science Private Tuitions
-            </h4>
-            <p className="text-mutedBlue">
-              Above Naturals Ice-Cream,Patel Chowk Ghatkopar East Mumbai 400075
-            </p>
+            <h4 className="font-semibold">Our Weekly Assembly Centers</h4>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {centers.map((center) => (
+                <span
+                  key={center}
+                  className="rounded-full bg-primaryBrown/10 px-3 py-1 text-sm text-mutedBlue"
+                >
+                  {center}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
