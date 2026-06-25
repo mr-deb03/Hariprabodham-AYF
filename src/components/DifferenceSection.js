@@ -35,14 +35,14 @@ export default function DifferenceSection() {
             </p>
           </div>
 
-          <div className="flex justify-center lg:justify-end">
+          <div className="flex justify-start lg:justify-end">
             <ImageCard src={img1} alt="Youth & Women Empowerment" />
           </div>
         </Reveal>
 
         {/* ROW 2 — LEFT IMAGE / RIGHT TEXT */}
         <Reveal variant="right" className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center mb-16 md:mb-32">
-          <div className="flex justify-center lg:justify-start">
+          <div className="flex justify-start lg:justify-start">
             <ImageCard src={img2} alt="Community Service" />
           </div>
 
@@ -69,7 +69,7 @@ export default function DifferenceSection() {
             </p>
           </div>
 
-          <div className="flex justify-center lg:justify-end">
+          <div className="flex justify-start lg:justify-end">
             <ImageCard src={img3} alt="Spiritual Development" />
           </div>
         </Reveal>
