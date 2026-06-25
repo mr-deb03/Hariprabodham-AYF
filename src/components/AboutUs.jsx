@@ -2,7 +2,9 @@ import React from "react";
 import { FaBullseye, FaEye } from "react-icons/fa";
 import Reveal from "./Reveal";
 import Tilt from "./Tilt";
-import aboutImage from "../assets/about/about_1.webp";
+import PhotoCarousel from "./PhotoCarousel";
+import aboutUs from "../assets/about/about-us.webp";
+import about1 from "../assets/about/about_1.webp";
 
 /*
  * Content modelled on the Hariprabodham Parivar "About Us" page
@@ -36,12 +38,11 @@ const AboutUs = () => {
           </Reveal>
 
           <Reveal variant="right" delay={150} className="flex justify-center lg:justify-end">
-            <Tilt className="overflow-hidden rounded-3xl shadow-2xl">
-              <img
-                src={aboutImage}
+            <Tilt className="w-full max-w-xl overflow-hidden rounded-3xl shadow-2xl">
+              <PhotoCarousel
+                images={[aboutUs, about1]}
                 alt="HariPrabodham community gathering"
-                loading="lazy"
-                className="h-full w-full object-cover"
+                className="aspect-[3/2] w-full"
               />
             </Tilt>
           </Reveal>
