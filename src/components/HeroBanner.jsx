@@ -1,18 +1,15 @@
 import React, { useEffect, useState } from "react";
-import banner1 from "../assets/home/banner_3_1.webp";
-import banner2 from "../assets/home/banner_3_2.webp";
-import banner3 from "../assets/home/banner_3_3.webp";
-import banner4 from "../assets/home/banner_3_4.webp";
-import banner5 from "../assets/home/banner_3_5.webp";
-import banner6 from "../assets/home/banner_3_6.webp";
+import banner1 from "../assets/home/banner1.webp";
+import banner2 from "../assets/home/banner2.webp";
+import banner3 from "../assets/home/banner3.webp";
 
 // Hero slides — cycle automatically, no controls or indicators.
-const slides = [banner1, banner2, banner3, banner4, banner5, banner6];
+const slides = [banner1, banner2, banner3];
 const SLIDE_INTERVAL = 5000; // ms
 
 export default function HeroBanner() {
   const [index, setIndex] = useState(0);
-  // Defer downloading slides 2-6 until after first paint so the first
+  // Defer downloading the other slides until after first paint so the first
   // (above-the-fold) image loads first instead of competing with the rest.
   const [loadRest, setLoadRest] = useState(false);
 
