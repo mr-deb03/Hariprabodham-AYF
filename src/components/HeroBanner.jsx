@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import banner1 from "../assets/home/banner1.webp";
 import banner2 from "../assets/home/banner2.webp";
 import banner3 from "../assets/home/banner3.webp";
+import banner4 from "../assets/home/banner4.webp";
 
 // Hero slides — cycle automatically, no controls or indicators.
-const slides = [banner1, banner2, banner3];
+const slides = [banner1, banner2, banner3, banner4];
 const SLIDE_INTERVAL = 5000; // ms
 
 export default function HeroBanner() {
