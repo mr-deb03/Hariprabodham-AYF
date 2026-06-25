@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaEnvelope, FaMapMarkerAlt, FaClock } from "react-icons/fa";
+import { FaEnvelope, FaMapMarkerAlt } from "react-icons/fa";
 import Reveal from "./Reveal";
 
 const ENQUIRY_EMAIL = "enquiry@hariprabodhambh.org";
@@ -14,11 +14,6 @@ const details = [
     icon: FaMapMarkerAlt,
     title: "Location",
     lines: ["Patel Chowk, Ghatkopar East", "Mumbai 400075"],
-  },
-  {
-    icon: FaClock,
-    title: "Weekly Assembly",
-    lines: ["Mon Youth Gathering: 8:30–10:30pm", "Sat Goshti Sabha: 8:30–10:30pm"],
   },
 ];
 
