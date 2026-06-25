@@ -11,6 +11,7 @@ const centers = [
   "Nerul",
   "Kalyan",
   "Badlapur",
+  "Rajasthan",
 ];
 
 const Footer = () => {
