@@ -6,7 +6,7 @@ import Tilt from "./Tilt";
 import img1 from "../assets/home/diff-1.webp";
 import img2 from "../assets/home/diff-2.webp";
 import img3 from "../assets/home/diff-3.webp";
-import img4 from "../assets/about/about_1.webp";
+import img4 from "../assets/about/about-us1.webp";
 import img5 from "../assets/home/about-photo.webp";
 import img6 from "../assets/home/forest.jpeg";
 

@@ -4,7 +4,7 @@ import Reveal from "./Reveal";
 import Tilt from "./Tilt";
 import PhotoCarousel from "./PhotoCarousel";
 import aboutUs from "../assets/about/about-us.webp";
-import about1 from "../assets/about/about_1.webp";
+import aboutUs1 from "../assets/about/about-us1.webp";
 
 /*
  * Content modelled on the Hariprabodham Parivar "About Us" page
@@ -40,7 +40,7 @@ const AboutUs = () => {
           <Reveal variant="right" delay={150} className="flex justify-center lg:justify-end">
             <Tilt className="w-full max-w-xl overflow-hidden rounded-3xl shadow-2xl">
               <PhotoCarousel
-                images={[aboutUs, about1]}
+                images={[aboutUs, aboutUs1]}
                 alt="HariPrabodham community gathering"
                 className="aspect-[3/2] w-full"
               />
