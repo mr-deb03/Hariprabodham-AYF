@@ -25,7 +25,7 @@ export default function DifferenceSection() {
 
         {/* ROW 1 — LEFT TEXT / RIGHT IMAGE */}
         <Reveal variant="left" className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center mb-16 md:mb-32">
-          <div>
+          <div className="order-2 lg:order-none">
             <h3 className="text-2xl font-medium text-primaryBrown mb-4">
               Youth & Women Empowerment
             </h3>
@@ -35,7 +35,7 @@ export default function DifferenceSection() {
             </p>
           </div>
 
-          <div className="flex justify-start lg:justify-end">
+          <div className="order-1 lg:order-none flex justify-start lg:justify-end">
             <ImageCard src={img1} alt="Youth & Women Empowerment" />
           </div>
         </Reveal>
@@ -59,7 +59,7 @@ export default function DifferenceSection() {
 
         {/* ROW 3 — LEFT TEXT / RIGHT IMAGE */}
         <Reveal variant="left" className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
-          <div>
+          <div className="order-2 lg:order-none">
             <h3 className="text-2xl font-medium text-primaryBrown mb-4">
               Spiritual & Personal Development
             </h3>
@@ -69,7 +69,7 @@ export default function DifferenceSection() {
             </p>
           </div>
 
-          <div className="flex justify-start lg:justify-end">
+          <div className="order-1 lg:order-none flex justify-start lg:justify-end">
             <ImageCard src={img3} alt="Spiritual Development" />
           </div>
         </Reveal>
