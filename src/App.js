@@ -7,6 +7,7 @@ import Home from "./pages/Home";
 const About = lazy(() => import("./pages/About"));
 const Parampara = lazy(() => import("./pages/Parampara"));
 const EventsPage = lazy(() => import("./pages/Events"));
+const EventDetail = lazy(() => import("./pages/EventDetail"));
 const Media = lazy(() => import("./pages/Media"));
 const Smruti = lazy(() => import("./pages/Smruti"));
 const Contact = lazy(() => import("./pages/Contact"));
@@ -19,6 +20,7 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/parampara" element={<Parampara />} />
         <Route path="/events" element={<EventsPage />} />
+        <Route path="/events/:slug" element={<EventDetail />} />
         <Route path="/media" element={<Media />} />
         <Route path="/smruti" element={<Smruti />} />
         <Route path="/contact" element={<Contact />} />

@@ -1,16 +1,16 @@
 import React from "react";
 import PageHeader from "../components/PageHeader";
-import Events from "../components/Events";
+import EventGalleries from "../components/EventGalleries";
 
 export default function EventsPage() {
   return (
     <>
       <PageHeader
         title="Events"
-        subtitle="Join us for our upcoming gatherings, festivals and seva activities."
+        subtitle="Photos and highlights from our gatherings, festivals and seva activities."
         current="Events"
       />
-      <Events />
+      <EventGalleries />
     </>
   );
 }
