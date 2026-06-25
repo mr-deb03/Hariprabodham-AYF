@@ -8,6 +8,12 @@ const eventsMeta = {
   },
   "Hariprabodham-Youth-Fest-2023": {
     "date": "2023-02-08"
+  },
+  "Bhakti_Utsav": {
+    "date": "2025-12-20"
+  },
+  "Prarambh_shibir-2": {
+    "date": "2023-04-14"
   }
 };
 
