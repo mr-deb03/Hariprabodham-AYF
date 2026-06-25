@@ -25,7 +25,12 @@ const Banner = () => {
         </div>
 
         {/* CTA */}
-        <a href="#contact" className="btn-primary">
+        <a
+          href="https://docs.google.com/forms/d/e/1FAIpQLScpJBfZCT-yeI7tbTMrdOt8yPErBOmYg6PpXeb5pei02Y3TlA/viewform"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-primary"
+        >
           Register Now →
         </a>
       </Reveal>
