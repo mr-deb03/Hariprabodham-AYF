@@ -29,7 +29,7 @@ const Events = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
         {events.map((event, index) => (
-          <Reveal key={event.title} variant="zoom" delay={index * 100} className="group h-full">
+          <Reveal key={event.title} variant="flip" delay={index * 100} className="group h-full">
             <Tilt className="h-full overflow-hidden rounded-2xl bg-white shadow-lg hover:shadow-2xl">
               <div className="relative h-52 overflow-hidden">
                 <img

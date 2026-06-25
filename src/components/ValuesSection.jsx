@@ -89,7 +89,7 @@ const FourPillars = () => {
           {pillars.map((pillar, index) => (
             <Reveal
               key={pillar.title}
-              variant="zoom"
+              variant="flip"
               delay={index * 100}
               className="w-full max-w-[420px]"
             >

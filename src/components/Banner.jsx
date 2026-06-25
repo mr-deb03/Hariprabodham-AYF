@@ -1,13 +1,19 @@
 import React from "react";
 import Reveal from "./Reveal";
+import Parallax from "./Parallax";
 import forest from "../assets/home/forest.jpeg";
 
 const Banner = () => {
   return (
-    <section
-      className="relative h-[45vh] bg-cover bg-center bg-scroll md:bg-fixed"
-      style={{ backgroundImage: `url(${forest})` }}
-    >
+    <section className="relative h-[45vh] overflow-hidden">
+      {/* Parallax background — oversized so the scroll-drift never reveals an edge */}
+      <Parallax speed={0.15} className="absolute inset-0">
+        <div
+          className="absolute -inset-y-[30%] inset-x-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${forest})` }}
+        />
+      </Parallax>
+
       {/* Overlay */}
       <div className="absolute inset-0 bg-black/60" />
 

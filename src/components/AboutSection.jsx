@@ -2,6 +2,7 @@ import React from "react";
 import aboutBg from "../assets/home/about-bg.webp";
 import aboutImage from "../assets/home/about-photo.webp";
 import Reveal from "./Reveal";
+import Tilt from "./Tilt";
 
 export default function AboutSection() {
   return (
@@ -48,7 +49,7 @@ export default function AboutSection() {
 
           {/* RIGHT: IMAGE */}
           <Reveal variant="right" className="flex justify-center lg:justify-end" delay={150}>
-            <div className="rounded-3xl overflow-hidden shadow-2xl max-w-xl">
+            <Tilt className="rounded-3xl overflow-hidden shadow-2xl max-w-xl">
               <img
                 src={aboutImage}
                 alt="Spiritual guidance"
@@ -56,7 +57,7 @@ export default function AboutSection() {
                 decoding="async"
                 className="w-full h-full object-cover"
               />
-            </div>
+            </Tilt>
           </Reveal>
 
         </div>

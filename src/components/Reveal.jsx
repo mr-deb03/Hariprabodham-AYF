@@ -22,9 +22,14 @@ const hiddenByVariant = {
   right: "opacity-0 translate-x-[40px]",
   zoom: "opacity-0 scale-95",
   fade: "opacity-0",
+  flip: "opacity-0 [transform:perspective(1000px)_rotateX(22deg)_translateY(36px)]",
 };
 
 const VISIBLE = "opacity-100 translate-x-0 translate-y-0 scale-100";
+// Variants whose revealed state needs a transform other than the default flat one.
+const visibleByVariant = {
+  flip: "opacity-100 [transform:perspective(1000px)_rotateX(0deg)_translateY(0px)]",
+};
 
 export default function Reveal({
   children,
@@ -74,13 +79,14 @@ export default function Reveal({
   }, [once, amount]);
 
   const hidden = hiddenByVariant[variant] || hiddenByVariant.up;
+  const shown = visibleByVariant[variant] || VISIBLE;
 
   return (
     <Tag
       ref={ref}
       style={delay ? { transitionDelay: `${delay}ms` } : undefined}
       className={`transition-[transform,opacity] duration-[800ms] ease-out will-change-transform motion-reduce:transition-none ${
-        visible ? VISIBLE : hidden
+        visible ? shown : hidden
       } ${className}`}
       {...rest}
     >

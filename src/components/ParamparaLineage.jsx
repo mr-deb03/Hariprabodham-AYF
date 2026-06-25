@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Reveal from "./Reveal";
+import Tilt from "./Tilt";
 import swaminarayanImg from "../assets/parampara/swaminarayan-bhagwan.webp";
 import gunatitanandImg from "../assets/parampara/gunatitanand-swami.webp";
 import shastrijiImg from "../assets/parampara/shastriji-maharaj.webp";
@@ -173,9 +174,9 @@ export default function ParamparaLineage() {
           key={active}
           className="animate-panel grid grid-cols-1 items-center gap-10 rounded-3xl bg-white p-8 shadow-lg md:grid-cols-2 md:p-12"
         >
-          <div className="mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-2xl bg-gradient-to-br from-softGray to-[#efe9e2] shadow-xl">
+          <Tilt className="mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-2xl bg-gradient-to-br from-softGray to-[#efe9e2] shadow-xl">
             <Portrait guru={guru} big />
-          </div>
+          </Tilt>
 
           <div>
             <span className="inline-block rounded-full bg-primaryBrown/10 px-3 py-1 text-xs font-medium text-primaryBrown">

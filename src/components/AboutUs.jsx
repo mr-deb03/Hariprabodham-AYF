@@ -1,6 +1,7 @@
 import React from "react";
 import { FaBullseye, FaEye } from "react-icons/fa";
 import Reveal from "./Reveal";
+import Tilt from "./Tilt";
 import aboutImage from "../assets/about/about_1.webp";
 
 /*
@@ -35,14 +36,14 @@ const AboutUs = () => {
           </Reveal>
 
           <Reveal variant="right" delay={150} className="flex justify-center lg:justify-end">
-            <div className="overflow-hidden rounded-3xl shadow-2xl">
+            <Tilt className="overflow-hidden rounded-3xl shadow-2xl">
               <img
                 src={aboutImage}
                 alt="HariPrabodham community gathering"
                 loading="lazy"
                 className="h-full w-full object-cover"
               />
-            </div>
+            </Tilt>
           </Reveal>
         </div>
       </section>

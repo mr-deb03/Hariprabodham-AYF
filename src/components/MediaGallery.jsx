@@ -89,7 +89,7 @@ export default function MediaGallery() {
         {hasYouTube ? (
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             {YOUTUBE_VIDEO_IDS.map((id, index) => (
-              <Reveal key={id} variant="zoom" delay={index * 100}>
+              <Reveal key={id} variant="flip" delay={index * 100}>
                 <div className="aspect-video overflow-hidden rounded-2xl shadow-lg">
                   <iframe
                     className="h-full w-full"
@@ -129,7 +129,7 @@ export default function MediaGallery() {
         {hasInstagram ? (
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {INSTAGRAM_POST_URLS.map((url, index) => (
-              <Reveal key={url} variant="zoom" delay={index * 100}>
+              <Reveal key={url} variant="flip" delay={index * 100}>
                 <blockquote
                   className="instagram-media"
                   data-instgrm-permalink={url}

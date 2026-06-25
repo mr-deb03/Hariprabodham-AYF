@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import Reveal from "./Reveal";
+import Parallax from "./Parallax";
 
 /* Light, warm banner used at the top of inner pages (About, Parampara, Contact). */
 export default function PageHeader({ title, subtitle, current }) {
@@ -9,9 +10,13 @@ export default function PageHeader({ title, subtitle, current }) {
       {/* Soft golden ambient glow */}
       <div className="pointer-events-none absolute inset-0 bg-hero-glow opacity-70" />
 
-      {/* Decorative warm blobs */}
-      <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-gold/10" />
-      <div className="pointer-events-none absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-saffron/10" />
+      {/* Decorative warm blobs — parallax for a sense of depth */}
+      <Parallax speed={0.35} className="pointer-events-none absolute -top-24 -left-24">
+        <div className="h-72 w-72 rounded-full bg-gold/10" />
+      </Parallax>
+      <Parallax speed={-0.3} className="pointer-events-none absolute -bottom-24 -right-24">
+        <div className="h-80 w-80 rounded-full bg-saffron/10" />
+      </Parallax>
 
       <Reveal className="relative z-10">
         <h1 className="font-display text-5xl font-semibold text-maroon md:text-6xl">
