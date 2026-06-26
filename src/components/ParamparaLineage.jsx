@@ -33,7 +33,6 @@ const lineage = [
     birthName: "Mulji Sharma",
     birthplace: "Bhadra, Gujarat",
     image: gunatitanandImg,
-    thumbY: "-16%",
     bio: "The first spiritual successor and manifestation of Brahman. He embodied service and devotion, built the Junagadh temple, and revealed the principle of Sakaar Brahman.",
   },
   {
