@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaEnvelope, FaMapMarkerAlt } from "react-icons/fa";
+import { FaEnvelope } from "react-icons/fa";
 import Reveal from "./Reveal";
 
 const ENQUIRY_EMAIL = "enquiry@hariprabodhambh.org";
@@ -9,11 +9,6 @@ const details = [
     icon: FaEnvelope,
     title: "Email",
     lines: [ENQUIRY_EMAIL],
-  },
-  {
-    icon: FaMapMarkerAlt,
-    title: "Location",
-    lines: ["Patel Chowk, Ghatkopar East", "Mumbai 400075"],
   },
 ];
 
