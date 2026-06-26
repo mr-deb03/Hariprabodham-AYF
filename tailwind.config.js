@@ -37,6 +37,11 @@ export default {
         accent: "#E08A1E",
         mutedBlue: "#5E5E5E",
         softGray: "#F8F3E8",
+
+        // Logo gradient (turban crimson → magenta → royal blue)
+        logoCrimson: "#E01E5A",
+        logoMagenta: "#C2186F",
+        logoBlue: "#1E3A8A",
       },
       boxShadow: {
         soft: "0 10px 30px rgba(0, 0, 0, 0.06)",

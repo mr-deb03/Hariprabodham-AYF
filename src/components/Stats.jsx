@@ -62,7 +62,7 @@ function Counter({ value, suffix = "", duration = 2000 }) {
 
 const Stats = () => {
   return (
-    <section className="relative py-24 px-6 md:px-20 bg-gradient-to-br from-accent via-primaryBrown to-primaryDark text-white text-center overflow-hidden">
+    <section className="relative py-24 px-6 md:px-20 bg-gradient-to-br from-logoCrimson via-logoMagenta to-logoBlue text-white text-center overflow-hidden">
       <Reveal>
         <p className="tracking-[0.3em] text-xs uppercase opacity-80">
           Our Reach

@@ -50,7 +50,7 @@ const AboutUs = () => {
       </section>
 
       {/* SUHRADBHAV PHILOSOPHY */}
-      <section className="bg-gradient-to-br from-accent via-primaryBrown to-primaryDark py-20 px-6 md:px-12 text-white">
+      <section className="bg-gradient-to-br from-logoCrimson via-logoMagenta to-logoBlue py-20 px-6 md:px-12 text-white">
         <Reveal className="mx-auto max-w-4xl text-center">
           <p className="mb-4 text-sm font-semibold uppercase tracking-[0.25em] text-gold/90">
             Our Guiding Spirit
