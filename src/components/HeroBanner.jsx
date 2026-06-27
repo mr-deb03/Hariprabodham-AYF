@@ -36,9 +36,11 @@ export default function HeroBanner() {
           loading={i === 0 ? "eager" : "lazy"}
           fetchPriority={i === 0 ? "high" : "low"}
           decoding="async"
-          className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-1000 ease-in-out motion-reduce:transition-none ${
-            i === index ? "opacity-100" : "opacity-0"
-          }`}
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ease-in-out motion-reduce:transition-none ${
+            src === banner5
+              ? "object-bottom origin-bottom scale-110"
+              : "object-center"
+          } ${i === index ? "opacity-100" : "opacity-0"}`}
         />
       ))}
 
