@@ -61,26 +61,22 @@ export default function EventDetail() {
 
       <section className="bg-softGray py-16 px-6 md:px-12">
         <div className="mx-auto max-w-6xl">
-          {/* Masonry-style gallery (varying photo heights) */}
-          <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
+          {/* Uniform photo grid — equal 4:3 tiles keep the layout tidy across
+              any number of photos and mixed orientations. */}
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {event.images.map((src, i) => (
-              <Reveal
-                key={i}
-                variant="zoom"
-                delay={(i % 3) * 80}
-                className="mb-4 break-inside-avoid"
-              >
+              <Reveal key={i} variant="zoom" delay={(i % 4) * 70}>
                 <button
                   type="button"
                   onClick={() => setLightbox(i)}
-                  className="block w-full overflow-hidden rounded-xl shadow-md focus:outline-none focus:ring-2 focus:ring-primaryBrown/40"
+                  className="group block aspect-[4/3] w-full overflow-hidden rounded-xl shadow-md focus:outline-none focus:ring-2 focus:ring-primaryBrown/40"
                 >
                   <img
                     src={src}
                     alt={`${event.title} ${i + 1}`}
                     loading="lazy"
                     decoding="async"
-                    className="w-full transition-transform duration-500 hover:scale-[1.03]"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 </button>
               </Reveal>
