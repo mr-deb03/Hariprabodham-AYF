@@ -25,9 +25,8 @@ export default function HeroBanner() {
   }, []);
 
   return (
-    <section id="home" className="relative aspect-[16/9] w-full overflow-hidden bg-cream">
-      {/* Crossfading slides — most fill the 16:9 frame edge-to-edge; very wide
-          panoramas are contained so the whole photo stays visible. */}
+    <section id="home" className="relative aspect-[16/9] w-full overflow-hidden">
+      {/* Crossfading slides — each fills the 16:9 frame edge-to-edge. */}
       {slides.map((src, i) => (
         <img
           key={i}
@@ -37,9 +36,9 @@ export default function HeroBanner() {
           loading={i === 0 ? "eager" : "lazy"}
           fetchPriority={i === 0 ? "high" : "low"}
           decoding="async"
-          className={`absolute inset-0 h-full w-full object-center transition-opacity duration-1000 ease-in-out motion-reduce:transition-none ${
-            src === banner5 ? "object-contain" : "object-cover"
-          } ${i === index ? "opacity-100" : "opacity-0"}`}
+          className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-1000 ease-in-out motion-reduce:transition-none ${
+            i === index ? "opacity-100" : "opacity-0"
+          }`}
         />
       ))}
 
