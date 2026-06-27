@@ -36,8 +36,10 @@ export default function Navbar() {
     ? "text-maroon"
     : "text-maroon [text-shadow:0_1px_12px_rgba(255,248,240,0.95)]";
 
-  const rowHeight = scrolled ? "h-16" : "h-20";
-  const logoSize = scrolled ? "h-11 md:h-12" : "h-14 md:h-16";
+  // Big logo over the hero; on scroll the bar collapses to the original
+  // compact layout.
+  const rowHeight = scrolled ? "h-14" : "h-20 md:h-28";
+  const logoSize = scrolled ? "h-10 md:h-11" : "h-[4.5rem] md:h-[6.5rem]";
 
   const closeMenu = () => setMenuOpen(false);
 
@@ -52,7 +54,7 @@ export default function Navbar() {
           {/* LEFT */}
           <div className="flex items-center gap-8">
             <Link to="/" className="md:hidden" onClick={closeMenu}>
-              <img src={HPAYGLogo} alt="HPAYG home" className="h-11 w-auto" />
+              <img src={HPAYGLogo} alt="HPAYG home" className="h-14 w-auto" />
             </Link>
 
             <nav
@@ -71,7 +73,7 @@ export default function Navbar() {
           </div>
 
           {/* CENTER LOGO */}
-          <div className="absolute left-1/2 hidden -translate-x-1/2 md:flex">
+          <div className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 md:flex">
             <Link to="/">
               <img
                 src={HPAYGLogo}

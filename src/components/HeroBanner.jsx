@@ -3,9 +3,11 @@ import banner1 from "../assets/home/banner1.webp";
 import banner2 from "../assets/home/banner2.webp";
 import banner3 from "../assets/home/banner3.webp";
 import banner4 from "../assets/home/banner4.webp";
+import banner5 from "../assets/home/banner5.webp";
+import banner6 from "../assets/home/banner6.webp";
 
 // Hero slides — cycle automatically, no controls or indicators.
-const slides = [banner1, banner2, banner3, banner4];
+const slides = [banner1, banner2, banner3, banner4, banner5, banner6];
 const SLIDE_INTERVAL = 5000; // ms
 
 export default function HeroBanner() {

@@ -4,8 +4,6 @@ import {
   FaStar,
   FaFutbol,
   FaHandsHelping,
-  FaHeartbeat,
-  FaBriefcase,
   FaFemale,
   FaChild,
 } from "react-icons/fa";
@@ -38,16 +36,6 @@ const activities = [
     text: "Environmental care, cleanliness drives, and food & clothing drives that keep our community connected and thriving.",
   },
   {
-    icon: FaHeartbeat,
-    title: "Health Activities",
-    text: "Blood donation drives, medical awareness forums, and yoga & meditation sessions for wellness and preventive care.",
-  },
-  {
-    icon: FaBriefcase,
-    title: "Career Seminars",
-    text: "Resume and interview workshops, mentorship, and networking with industry experts to empower youth and professionals.",
-  },
-  {
     icon: FaFemale,
     title: "Women's Empowerment",
     text: "Encouraging self-sufficiency and independence through social, professional and creative gatherings.",
@@ -73,12 +61,19 @@ const Activities = () => {
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {activities.map((item, index) => {
             const Icon = item.icon;
+            // When the last row has exactly 2 cards, nudge them to the middle
+            // two columns (cols 2-3) at desktop width instead of left-aligned.
+            const trailing = activities.length % 4;
+            const centered =
+              trailing === 2 && index === activities.length - trailing
+                ? "lg:col-start-2"
+                : "";
             return (
               <Reveal
                 key={item.title}
                 variant="zoom"
                 delay={(index % 4) * 100}
-                className="group h-full"
+                className={`group h-full ${centered}`}
               >
                 <Tilt className="h-full rounded-2xl border border-gray-100 bg-softGray p-8 shadow-sm transition-shadow duration-300 hover:shadow-xl">
                   <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-primaryBrown/10 text-2xl text-primaryBrown transition-colors duration-300 group-hover:bg-primaryBrown group-hover:text-white">
