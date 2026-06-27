@@ -1,5 +1,8 @@
 // Auto-generated from event photo EXIF. date = earliest DateTimeOriginal taken.
 const eventsMeta = {
+  "Ram_Navami": {
+    "date": "2026-03-26"
+  },
   "Prarambh_Shibir": {
     "date": "2022-09-24"
   },
