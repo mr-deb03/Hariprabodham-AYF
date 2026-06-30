@@ -12,6 +12,7 @@ const rightLinks = [
   { label: "Media", to: "/media" },
   { label: "Smruti", to: "/smruti" },
   { label: "Contact", to: "/contact" },
+  { label: "Karyakarta", to: "/portal" },
 ];
 
 export default function Navbar() {
