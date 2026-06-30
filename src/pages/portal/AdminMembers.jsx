@@ -1,7 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 import { supabase, fetchAllRows } from "../../lib/supabaseClient";
-import { MANDALS, MANDAL_CODES, mandalShort } from "../../portal/constants";
+import {
+  MANDALS,
+  MANDAL_CODES,
+  mandalShort,
+  todayISO,
+  EDUCATION_LEVELS,
+  EDUCATION_STATUSES,
+  OCCUPATIONS,
+} from "../../portal/constants";
 import {
   Alert,
   Card,
@@ -17,18 +25,18 @@ import {
   thCell,
 } from "../../portal/ui";
 
-// Column headers used in the bulk-import Excel template.
+// Column headers used in the bulk-import Excel template (mirrors the master
+// sheet). "Roll No" is the AYG code; Mandal is auto-derived from its first two
+// letters when a Mandal column isn't present.
 const IMPORT_COLUMNS = [
   "Name",
-  "Code",
-  "Mandal",
+  "Roll No",
+  "Date of Birth",
   "Mobile",
   "Parent Mobile",
+  "Education",
+  "Education Status",
   "Occupation",
-  "Standard",
-  "Study Status",
-  "Qualification",
-  "Designation",
 ];
 
 // Case-insensitive lookup of a cell value across possible header spellings.
@@ -42,19 +50,44 @@ const pickCell = (row, ...keys) => {
   return "";
 };
 
+const MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+// Normalise a date-of-birth cell to YYYY-MM-DD. Handles ISO, DD/MM/YYYY,
+// DD-MMM-YYYY and Excel serial numbers; returns "" if it can't parse.
+const parseDob = (v) => {
+  const s = String(v ?? "").trim();
+  if (!s) return "";
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  if (/^\d+(\.\d+)?$/.test(s)) {
+    const n = parseFloat(s);
+    if (n > 10000 && n < 60000) {
+      return new Date(Date.UTC(1899, 11, 30) + n * 86400000).toISOString().slice(0, 10);
+    }
+    return "";
+  }
+  let m = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+  if (m) return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+  m = s.match(/^(\d{1,2})[-/ ]([A-Za-z]{3,})[-/ ](\d{4})$/);
+  if (m) {
+    const mo = MONTHS[m[2].slice(0, 3).toLowerCase()];
+    if (mo) return `${m[3]}-${String(mo).padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+  }
+  return "";
+};
+
 const PAGE_SIZE = 20;
 
 const EMPTY_FORM = {
   name: "",
   mobile: "",
   parent_mobile: "",
+  dob: "",
+  education: "",
+  study_status: "pursuing", // Education status
   occupation: "student",
-  standard: "",
-  study_status: "pursuing",
-  qualification: "",
-  designation: "",
   mandal: "",
   team: "",
+  code: "",
+  active: true,
 };
 
 export default function AdminMembers() {
@@ -65,10 +98,39 @@ export default function AdminMembers() {
   const [page, setPage] = useState(1);
   const [msg, setMsg] = useState({ kind: "", text: "" });
 
-  const [addOpen, setAddOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
   const [adding, setAdding] = useState(false);
+
+  const openAdd = () => {
+    setMsg({ kind: "", text: "" });
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setFormOpen(true);
+  };
+
+  const openEdit = (m) => {
+    setMsg({ kind: "", text: "" });
+    setEditingId(m.id);
+    // Normalise so the radios/select reliably match stored values even if an
+    // import saved them with different casing/spacing (e.g. "Completed", "Job").
+    setForm({
+      name: m.name || "",
+      mobile: m.mobile || "",
+      parent_mobile: m.parent_mobile || "",
+      dob: m.dob || "",
+      education: (m.education || "").trim(),
+      study_status: (m.study_status || "pursuing").toLowerCase(),
+      occupation: (m.occupation || "student").toLowerCase(),
+      mandal: m.mandal || "",
+      team: "",
+      code: m.code || "",
+      active: m.active ?? true,
+    });
+    setFormOpen(true);
+  };
 
   const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState(null);
@@ -111,17 +173,15 @@ export default function AdminMembers() {
       code = form.team + String(next).padStart(2, "0");
     }
 
-    const isStudent = form.occupation === "student";
     const { error } = await supabase.from("members").insert({
       name: form.name.trim(),
       mandal: form.mandal,
       mobile: form.mobile.trim() || null,
       parent_mobile: form.parent_mobile.trim() || null,
-      occupation: form.occupation,
-      standard: isStudent ? form.standard.trim() || null : null,
-      study_status: isStudent ? form.study_status : null,
-      qualification: !isStudent ? form.qualification.trim() || null : null,
-      designation: !isStudent ? form.designation.trim() || null : null,
+      dob: form.dob || null,
+      education: form.education || null,
+      study_status: form.study_status || null,
+      occupation: form.occupation || null,
       team: form.team || null,
       code,
     });
@@ -131,11 +191,47 @@ export default function AdminMembers() {
       return;
     }
     setForm(EMPTY_FORM);
-    setAddOpen(false);
+    setFormOpen(false);
     setMsg({
       kind: "success",
       text: code ? `Member added as ${code}.` : "Member added.",
     });
+    load();
+  };
+
+  // Save edits to an existing member. The AYG code is editable directly here;
+  // `team` is kept in sync with the code's first 4 chars.
+  const updateMember = async (e) => {
+    e.preventDefault();
+    if (!editingId || !form.name.trim() || !form.mandal) return;
+    setAdding(true);
+    setMsg({ kind: "", text: "" });
+
+    const code = form.code.trim();
+    const { error } = await supabase
+      .from("members")
+      .update({
+        name: form.name.trim(),
+        mandal: form.mandal,
+        mobile: form.mobile.trim() || null,
+        parent_mobile: form.parent_mobile.trim() || null,
+        dob: form.dob || null,
+        education: form.education || null,
+        study_status: form.study_status || null,
+        occupation: form.occupation || null,
+        code: code || null,
+        team: code.length >= 6 ? code.slice(0, 4) : null,
+        active: form.active,
+      })
+      .eq("id", editingId);
+    setAdding(false);
+    if (error) {
+      setMsg({ kind: "error", text: error.message });
+      return;
+    }
+    setFormOpen(false);
+    setEditingId(null);
+    setMsg({ kind: "success", text: "Member updated." });
     load();
   };
 
@@ -159,27 +255,23 @@ export default function AdminMembers() {
     const sample = [
       {
         Name: "Ramesh Patel",
-        Code: "HK0101",
-        Mandal: "HK",
+        "Roll No": "SY1101",
+        "Date of Birth": "2002-05-14",
         Mobile: "9876543210",
         "Parent Mobile": "9123456780",
-        Occupation: "student",
-        Standard: "12th",
-        "Study Status": "pursuing",
-        Qualification: "",
-        Designation: "",
+        Education: "Graduate (B.Com, BSc, etc)",
+        "Education Status": "Completed",
+        Occupation: "Student",
       },
       {
         Name: "Suresh Shah",
-        Code: "HK0102",
-        Mandal: "HK",
+        "Roll No": "SY1102",
+        "Date of Birth": "1998-11-02",
         Mobile: "9876500000",
         "Parent Mobile": "",
-        Occupation: "working",
-        Standard: "",
-        "Study Status": "",
-        Qualification: "B.Com",
-        Designation: "Accountant",
+        Education: "HSC (11th, 12th)",
+        "Education Status": "Pursuing",
+        Occupation: "Job",
       },
     ];
     const ws = XLSX.utils.json_to_sheet(sample, { header: IMPORT_COLUMNS });
@@ -203,46 +295,74 @@ export default function AdminMembers() {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
 
+      // Which optional columns the file actually contains — so we only update
+      // those and never blank out fields the sheet didn't include.
+      const headers = new Set(
+        Object.keys(rows[0] || {}).map((k) => k.trim().toLowerCase())
+      );
+      const has = (...names) => names.some((n) => headers.has(n.toLowerCase()));
+      const hasDob = has("Date of Birth", "DOB", "Date Of Birth");
+      const hasMobile = has("Mobile", "Contact", "Contact Number");
+      const hasParent = has("Parent Mobile", "Parent Contact");
+      const hasEducation = has("Education", "Qualification", "Latest Studies");
+      const hasStatus = has("Education Status", "Study Status", "Studies");
+      const hasOccupation = has("Occupation", "Status");
+
       const valid = [];
       const bad = [];
       rows.forEach((row, i) => {
         const name = pickCell(row, "Name");
-        const mandal = pickCell(row, "Mandal").toUpperCase();
+        const code = pickCell(row, "Roll No", "Code", "AYG Code");
+        // Mandal column if present, otherwise derive from the Roll No prefix
+        // (e.g. SY1101 → SY, AB0101 → AB).
+        const mandal =
+          pickCell(row, "Mandal").toUpperCase() ||
+          (code.length >= 2 ? code.slice(0, 2).toUpperCase() : "");
         if (!name || !MANDAL_CODES.includes(mandal)) {
           bad.push(i + 2); // +1 for header row, +1 for 1-based numbering
           return;
         }
-        const code = pickCell(row, "Code", "AYG Code");
-        const occRaw = pickCell(row, "Occupation", "Status").toLowerCase();
-        const occupation = ["student", "working"].includes(occRaw) ? occRaw : null;
-        const ssRaw = pickCell(row, "Study Status", "Studies").toLowerCase();
-        const study_status = ["pursuing", "completed"].includes(ssRaw) ? ssRaw : null;
 
-        valid.push({
+        // Same key set on every row so PostgREST builds one upsert statement.
+        const rec = {
           name,
           mandal,
           code: code || null,
           team: code.length >= 6 ? code.slice(0, 4) : null,
-          mobile: pickCell(row, "Mobile", "Contact", "Contact Number") || null,
-          parent_mobile: pickCell(row, "Parent Mobile", "Parent Contact") || null,
-          occupation,
-          standard: pickCell(row, "Standard", "Standard / Year") || null,
-          study_status,
-          qualification: pickCell(row, "Qualification", "Latest Studies") || null,
-          designation: pickCell(row, "Designation") || null,
-        });
+        };
+        if (hasDob)
+          rec.dob = parseDob(pickCell(row, "Date of Birth", "DOB", "Date Of Birth")) || null;
+        if (hasMobile)
+          rec.mobile = pickCell(row, "Mobile", "Contact", "Contact Number") || null;
+        if (hasParent)
+          rec.parent_mobile = pickCell(row, "Parent Mobile", "Parent Contact") || null;
+        if (hasEducation)
+          rec.education =
+            pickCell(row, "Education", "Qualification", "Latest Studies") || null;
+        if (hasStatus) {
+          const ss = pickCell(row, "Education Status", "Study Status", "Studies").toLowerCase();
+          rec.study_status = ["pursuing", "completed"].includes(ss) ? ss : null;
+        }
+        if (hasOccupation) {
+          const occ = pickCell(row, "Occupation", "Status").toLowerCase();
+          rec.occupation = ["student", "job", "business"].includes(occ) ? occ : null;
+        }
+        valid.push(rec);
       });
 
       if (valid.length === 0) {
         setImporting(false);
         setMsg({
           kind: "error",
-          text: "No valid rows found. Each row needs a Name and a valid Mandal code. Download the sample for the exact columns.",
+          text: "No valid rows found. Each row needs a Name and a Roll No (or Mandal). Download the sample for the exact columns.",
         });
         return;
       }
 
-      const { error } = await supabase.from("members").insert(valid);
+      // Upsert by code (Roll No): existing members are updated, new ones inserted.
+      const { error } = await supabase
+        .from("members")
+        .upsert(valid, { onConflict: "code" });
       setImporting(false);
       if (error) {
         setMsg({ kind: "error", text: error.message });
@@ -252,7 +372,7 @@ export default function AdminMembers() {
       setImportOpen(false);
       setMsg({
         kind: "success",
-        text: `Imported ${valid.length} member(s).${
+        text: `Imported / updated ${valid.length} member(s).${
           bad.length ? ` Skipped ${bad.length} invalid row(s): ${bad.join(", ")}.` : ""
         }`,
       });
@@ -312,12 +432,16 @@ export default function AdminMembers() {
   const pageItems = filtered.slice(start, start + PAGE_SIZE);
 
   const counts = useMemo(() => {
-    const c = {};
+    const total = {};
+    const active = {};
     members.forEach((m) => {
-      if (m.active) c[m.mandal] = (c[m.mandal] || 0) + 1;
+      total[m.mandal] = (total[m.mandal] || 0) + 1;
+      if (m.active) active[m.mandal] = (active[m.mandal] || 0) + 1;
     });
-    return c;
+    return { total, active };
   }, [members]);
+
+  const activeTotal = members.filter((m) => m.active).length;
 
   return (
     <div>
@@ -329,23 +453,21 @@ export default function AdminMembers() {
         </div>
       )}
 
-      <div className="mb-6 flex flex-wrap gap-2 text-sm">
+      <div className="mb-6 flex flex-wrap items-center gap-2 text-sm">
         {MANDALS.map((m) => (
           <span key={m.code} className="rounded-full bg-cream px-3 py-1 text-ink">
-            {m.code}: <strong>{counts[m.code] || 0}</strong>
+            {m.code}: <strong>{counts.total[m.code] || 0}</strong>
+            <span className="text-textMuted"> ({counts.active[m.code] || 0} active)</span>
           </span>
         ))}
+        <span className="rounded-full bg-maroon/10 px-3 py-1 font-semibold text-maroon">
+          Total: {members.length}{" "}
+          <span className="font-normal text-maroon/70">({activeTotal} active)</span>
+        </span>
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-3">
-        <PortalButton
-          onClick={() => {
-            setMsg({ kind: "", text: "" });
-            setAddOpen(true);
-          }}
-        >
-          + Add member
-        </PortalButton>
+      <div className="mb-6 flex flex-wrap justify-end gap-3">
+        <PortalButton onClick={openAdd}>+ Add member</PortalButton>
         <PortalButton
           variant="outline"
           onClick={() => {
@@ -357,9 +479,13 @@ export default function AdminMembers() {
         </PortalButton>
       </div>
 
-      {/* Add member modal */}
-      <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add a member">
-        <form onSubmit={addMember} className="space-y-3">
+      {/* Add / Edit member modal */}
+      <Modal
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        title={editingId ? "Edit member" : "Add a member"}
+      >
+        <form onSubmit={editingId ? updateMember : addMember} className="space-y-3">
             <Field label="Name">
               <input required className={inputClass} value={form.name} onChange={set("name")} />
             </Field>
@@ -383,86 +509,69 @@ export default function AdminMembers() {
               </Field>
             </div>
 
-            <Field label="Status">
+            <Field label="Date of birth">
+              <input
+                type="date"
+                className={`${inputClass} h-11`}
+                value={form.dob}
+                max={todayISO()}
+                onChange={set("dob")}
+              />
+            </Field>
+
+            <Field label="Education">
+              <select className={inputClass} value={form.education} onChange={set("education")}>
+                <option value="">Select…</option>
+                {(EDUCATION_LEVELS.includes(form.education) || !form.education
+                  ? EDUCATION_LEVELS
+                  : [form.education, ...EDUCATION_LEVELS]
+                ).map((e) => (
+                  <option key={e} value={e}>
+                    {e}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label="Education status">
               <div className="flex gap-5 pt-1">
-                <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-ink">
-                  <input
-                    type="radio"
-                    name="occupation"
-                    className="h-4 w-4 accent-maroon"
-                    checked={form.occupation === "student"}
-                    onChange={() => setForm((f) => ({ ...f, occupation: "student" }))}
-                  />
-                  Student
-                </label>
-                <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-ink">
-                  <input
-                    type="radio"
-                    name="occupation"
-                    className="h-4 w-4 accent-maroon"
-                    checked={form.occupation === "working"}
-                    onChange={() => setForm((f) => ({ ...f, occupation: "working" }))}
-                  />
-                  Working
-                </label>
+                {EDUCATION_STATUSES.map((s) => (
+                  <label
+                    key={s.value}
+                    className="inline-flex cursor-pointer items-center gap-2 text-sm text-ink"
+                  >
+                    <input
+                      type="radio"
+                      name="study_status"
+                      className="h-4 w-4 accent-maroon"
+                      checked={form.study_status === s.value}
+                      onChange={() => setForm((f) => ({ ...f, study_status: s.value }))}
+                    />
+                    {s.label}
+                  </label>
+                ))}
               </div>
             </Field>
 
-            {form.occupation === "student" ? (
-              <>
-                <Field label="Standard / Year">
-                  <input
-                    className={inputClass}
-                    value={form.standard}
-                    onChange={set("standard")}
-                    placeholder="e.g. 10th, 12th, FY BCom"
-                  />
-                </Field>
-                <Field label="Studies">
-                  <div className="flex gap-5 pt-1">
-                    <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-ink">
-                      <input
-                        type="radio"
-                        name="study_status"
-                        className="h-4 w-4 accent-maroon"
-                        checked={form.study_status === "pursuing"}
-                        onChange={() => setForm((f) => ({ ...f, study_status: "pursuing" }))}
-                      />
-                      Pursuing
-                    </label>
-                    <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-ink">
-                      <input
-                        type="radio"
-                        name="study_status"
-                        className="h-4 w-4 accent-maroon"
-                        checked={form.study_status === "completed"}
-                        onChange={() => setForm((f) => ({ ...f, study_status: "completed" }))}
-                      />
-                      Completed
-                    </label>
-                  </div>
-                </Field>
-              </>
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Latest studies">
-                  <input
-                    className={inputClass}
-                    value={form.qualification}
-                    onChange={set("qualification")}
-                    placeholder="e.g. B.Com, B.E."
-                  />
-                </Field>
-                <Field label="Designation">
-                  <input
-                    className={inputClass}
-                    value={form.designation}
-                    onChange={set("designation")}
-                    placeholder="e.g. Accountant"
-                  />
-                </Field>
+            <Field label="Occupation">
+              <div className="flex flex-wrap gap-5 pt-1">
+                {OCCUPATIONS.map((o) => (
+                  <label
+                    key={o.value}
+                    className="inline-flex cursor-pointer items-center gap-2 text-sm text-ink"
+                  >
+                    <input
+                      type="radio"
+                      name="occupation"
+                      className="h-4 w-4 accent-maroon"
+                      checked={form.occupation === o.value}
+                      onChange={() => setForm((f) => ({ ...f, occupation: o.value }))}
+                    />
+                    {o.label}
+                  </label>
+                ))}
               </div>
-            )}
+            </Field>
 
             <Field label="Mandal">
               <select required className={inputClass} value={form.mandal} onChange={set("mandal")}>
@@ -475,35 +584,59 @@ export default function AdminMembers() {
               </select>
             </Field>
 
-            <Field
-              label="Team"
-              hint={
-                !form.mandal
-                  ? "Pick a mandal first to see its teams."
-                  : "Listed by team leader. The new member gets the next code in that team."
-              }
-            >
-              <select
-                className={inputClass}
-                value={form.team}
-                onChange={set("team")}
-                disabled={!form.mandal}
+            {editingId ? (
+              <>
+                <Field label="AYG code" hint="Controls roster ordering and team grouping.">
+                  <input
+                    className={inputClass}
+                    value={form.code}
+                    onChange={set("code")}
+                    placeholder="e.g. HK0106"
+                  />
+                </Field>
+                <Field label="Active">
+                  <label className="inline-flex cursor-pointer items-center gap-2 pt-1 text-sm text-ink">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 accent-maroon"
+                      checked={form.active}
+                      onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))}
+                    />
+                    Active member
+                  </label>
+                </Field>
+              </>
+            ) : (
+              <Field
+                label="Team"
+                hint={
+                  !form.mandal
+                    ? "Pick a mandal first to see its teams."
+                    : "Listed by team leader. The new member gets the next code in that team."
+                }
               >
-                <option value="">No team / unassigned</option>
-                {teams.map((t) => (
-                  <option key={t.team} value={t.team}>
-                    {t.team} — {t.leader?.name || "(no leader)"}
-                  </option>
-                ))}
-              </select>
-            </Field>
+                <select
+                  className={inputClass}
+                  value={form.team}
+                  onChange={set("team")}
+                  disabled={!form.mandal}
+                >
+                  <option value="">No team / unassigned</option>
+                  {teams.map((t) => (
+                    <option key={t.team} value={t.team}>
+                      {t.team} — {t.leader?.name || "(no leader)"}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
 
             <div className="flex justify-end gap-2 pt-2">
-              <PortalButton type="button" variant="outline" onClick={() => setAddOpen(false)}>
+              <PortalButton type="button" variant="outline" onClick={() => setFormOpen(false)}>
                 Cancel
               </PortalButton>
               <PortalButton type="submit" loading={adding}>
-                Add member
+                {editingId ? "Save changes" : "Add member"}
               </PortalButton>
             </div>
           </form>
@@ -519,8 +652,15 @@ export default function AdminMembers() {
           <p className="text-sm text-textSoft">
             Upload an <strong>.xlsx</strong>, <strong>.xls</strong> or{" "}
             <strong>.csv</strong> file. The first row must be column headers. Each
-            row needs at least a <strong>Name</strong> and a valid{" "}
-            <strong>Mandal</strong> code ({MANDAL_CODES.join(", ")}).
+            row needs a <strong>Name</strong> and a <strong>Roll No</strong> (its
+            first two letters set the mandal, e.g. SY1101 → SY).
+          </p>
+          <p className="rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-sm text-ink">
+            Matched by <strong>Roll No</strong>: existing members are{" "}
+            <strong>updated</strong>, new ones added — no duplicates. Only the
+            columns in your file are changed, so you can upload just{" "}
+            <em>Roll No + Education + Education Status + Occupation</em> to backfill
+            those without touching anything else.
           </p>
 
           <div className="rounded-lg border border-sand bg-cream/40 px-4 py-3 text-sm">
@@ -623,6 +763,12 @@ export default function AdminMembers() {
                     />
                   </td>
                   <td className={`${tdCell} text-right`}>
+                    <button
+                      onClick={() => openEdit(m)}
+                      className="mr-3 text-xs font-semibold text-maroon hover:underline"
+                    >
+                      Edit
+                    </button>
                     <button
                       onClick={() => remove(m)}
                       className="text-xs font-semibold text-red-700 hover:underline"

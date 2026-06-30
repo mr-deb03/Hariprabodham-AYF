@@ -22,8 +22,10 @@
 # scratch backup from logo-removal task (kept locally, not pushed)
 /src/assets/banner_3_6_original.png
 
-# generated member roster seed — contains personal data (names + mobiles), never push
+# generated member roster files — contain personal data (names + mobiles), never push
 *.local.sql
+*.local.xlsx
+*.local.csv
 
 npm-debug.log*
 yarn-debug.log*

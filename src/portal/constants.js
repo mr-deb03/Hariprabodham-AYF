@@ -21,6 +21,29 @@ export const MANDALS = [
 export const MANDAL_BY_CODE = Object.fromEntries(MANDALS.map((m) => [m.code, m]));
 export const MANDAL_CODES = MANDALS.map((m) => m.code);
 
+// Member detail categories — mirror the master-data sheet.
+export const EDUCATION_LEVELS = [
+  "SSC",
+  "HSC (11th, 12th)",
+  "Diploma",
+  "Graduate (B.Com, BSc, etc)",
+  "Engineering (BE, B.Tech, etc)",
+  "Post Graduate (M.Com, MSc, etc)",
+  "Other",
+];
+
+// Stored lowercase in the DB; shown with the label.
+export const EDUCATION_STATUSES = [
+  { value: "pursuing", label: "Pursuing" },
+  { value: "completed", label: "Completed" },
+];
+
+export const OCCUPATIONS = [
+  { value: "student", label: "Student" },
+  { value: "job", label: "Job" },
+  { value: "business", label: "Business" },
+];
+
 export const mandalLabel = (code) => {
   const m = MANDAL_BY_CODE[code];
   return m ? `${m.name} (${m.city}) · ${m.code}` : code || "—";
