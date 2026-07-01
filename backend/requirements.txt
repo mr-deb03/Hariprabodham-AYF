@@ -17,3 +17,6 @@ numpy
 
 # WhatsApp
 twilio
+
+# Telegram Bot API (plain HTTP)
+requests

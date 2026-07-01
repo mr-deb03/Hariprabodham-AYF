@@ -31,6 +31,25 @@ class Settings:
         "TWILIO_WHATSAPP_FROM", "whatsapp:+14155238886"
     )
 
+    # --- Telegram (Bot API) ---
+    # Token from @BotFather. When set, the bot's webhook is registered on
+    # startup. The website form stashes the selfie under a token and hands back
+    # a t.me/<bot>?start=<token> link; pressing Start delivers the photos.
+    telegram_bot_token: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    # Optional shared secret Telegram echoes back in the
+    # X-Telegram-Bot-Api-Secret-Token header so we can verify webhook calls.
+    telegram_webhook_secret: str = os.getenv("TELEGRAM_WEBHOOK_SECRET", "")
+    # Bot @username for building deep links. Auto-detected via getMe when blank.
+    telegram_bot_username: str = os.getenv("TELEGRAM_BOT_USERNAME", "")
+    # Base URL for Telegram API calls. Override with a proxy (e.g. a Cloudflare
+    # Worker) on hosts that can't reach api.telegram.org directly — some HF
+    # Spaces block outbound to Telegram while inbound webhooks still work.
+    telegram_api_base: str = os.getenv("TELEGRAM_API_BASE", "https://api.telegram.org")
+
+    # Where website submissions wait (selfie + details) for their Telegram
+    # deep-link to be opened. Entries are deleted after delivery or 24h.
+    pending_dir: str = os.getenv("PENDING_DIR", "pending_cache")
+
     # --- App ---
     # Public URL Twilio fetches matched images from. Auto-detected on Hugging
     # Face Spaces (SPACE_HOST) and Render (RENDER_EXTERNAL_URL); override with

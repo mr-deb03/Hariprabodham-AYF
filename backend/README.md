@@ -10,9 +10,10 @@ pinned: false
 
 # Smruti Backend — Setup & Deploy
 
-Receives the Smruti form (name, AYF code, WhatsApp number, face photo), finds
-the visitor in a Google Drive event album using face recognition, and sends the
-matched photos to their WhatsApp.
+Receives the Smruti form (name, AYF code, face photo), finds the visitor in a
+Google Drive event album using face recognition, and delivers the matched
+photos over **Telegram** (form → deep link → bot) — with a WhatsApp module kept
+in the codebase as a dormant alternate channel.
 
 > The block above (between the `---` lines) is **Hugging Face Space metadata** —
 > leave it in place; that's what tells HF to build this as a Docker Space on
@@ -54,6 +55,41 @@ Stack: **FastAPI** · **InsightFace** (onnxruntime, CPU) · **Google Drive API**
    can receive messages (sandbox limitation; not needed once you have an
    approved production sender + template).
 
+## 2b. Telegram delivery (free, official, no ban risk)
+
+A zero-cost delivery channel that runs on the **same** backend. The visitor
+uses the website form (name, AYF code, selfie); the bot then sends the matched
+photos into their Telegram chat. Nothing to approve, no per-message fee.
+
+1. In Telegram, message **@BotFather** → `/newbot` → pick a name and username
+   (e.g. `HariPrabodhamSmrutiBot`). Copy the **bot token** it gives you.
+2. Set the env vars (Space secret or local `.env`):
+   - `TELEGRAM_BOT_TOKEN` — the token from BotFather
+   - `TELEGRAM_WEBHOOK_SECRET` — any random string (recommended)
+3. That's it. On startup the backend auto-registers its webhook
+   (`{PUBLIC_BASE_URL}/telegram/webhook`) and discovers the bot's username.
+
+**Flow (form-driven):**
+
+```
+website form (name, AYF code, selfie)
+      │  POST /api/smruti
+      ▼
+backend stashes the selfie under a one-time token  →  returns
+      t.me/<bot>?start=<token>
+      ▼
+visitor taps "Open my photos on Telegram"  →  presses Start
+      ▼
+/telegram/webhook gets "/start <token>"  →  matches faces (same matcher as
+WhatsApp)  →  sends the album via sendMediaGroup  →  deletes the token + selfie
+```
+
+A user must press Start once (Telegram bots can't initiate chats) — the deep
+link handles that in one tap. Matching only runs for visitors who follow
+through, and the selfie is deleted after delivery (or purged after 24h if the
+link is never opened). The WhatsApp module stays in the codebase as a dormant
+alternate channel.
+
 ## 3. Deploy to Hugging Face Spaces (free)
 
 The free **CPU basic** tier gives 16 GB RAM, plenty for the full-accuracy
@@ -83,6 +119,7 @@ folder.
    - `DRIVE_FOLDER_ID` — from step 1.5
    - `GOOGLE_CREDENTIALS_JSON` — paste the full JSON from step 1.3
    - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` — from step 2.2
+   - `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET` — *(optional)* from step 2b
 
    …and **Variables** (non-secret):
    - `CORS_ORIGINS` — `https://YOUR-SITE.vercel.app,http://localhost:3000`
