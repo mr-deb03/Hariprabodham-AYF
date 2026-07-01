@@ -90,10 +90,9 @@ export default function Dashboard() {
           />
         )}
         <Tile
+          to="/portal/videos"
           title="Satsang Videos"
           desc="Private videos for registered karyakartas."
-          badge="Coming soon"
-          disabled
         />
       </div>
     </div>

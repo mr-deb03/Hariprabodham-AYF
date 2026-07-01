@@ -25,6 +25,7 @@ const PortalAdminApprovals = lazy(() => import("./pages/portal/AdminApprovals"))
 const PortalAdminMembers = lazy(() => import("./pages/portal/AdminMembers"));
 const PortalAttendance = lazy(() => import("./pages/portal/Attendance"));
 const PortalReport = lazy(() => import("./pages/portal/Report"));
+const PortalVideos = lazy(() => import("./pages/portal/Videos"));
 
 function App() {
   return (
@@ -61,6 +62,14 @@ function App() {
             element={
               <RequireAuth>
                 <PortalProfile />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="videos"
+            element={
+              <RequireAuth>
+                <PortalVideos />
               </RequireAuth>
             }
           />

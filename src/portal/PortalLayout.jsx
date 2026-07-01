@@ -155,6 +155,9 @@ function Chrome() {
                 <NavLink end to="/portal" className={linkClass}>
                   Dashboard
                 </NavLink>
+                <NavLink to="/portal/videos" className={linkClass}>
+                  Videos
+                </NavLink>
                 {canAttend && (
                   <NavLink to="/portal/attendance" className={linkClass}>
                     Attendance

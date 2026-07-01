@@ -1,6 +1,15 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { FaYoutube, FaInstagram } from "react-icons/fa";
 import Reveal from "./Reveal";
+import {
+  fetchPlaylistVideos,
+  resolveUploadsPlaylist,
+  youtubeConfigured,
+} from "../lib/youtube";
+
+// When a channel + API key are configured the gallery auto-pulls the latest
+// public uploads; otherwise it falls back to the hand-picked ids below.
+const YT_CHANNEL = process.env.REACT_APP_YT_CHANNEL_ID;
 
 /*
  * Videos & posts from our social channels, embedded on the Events page.
@@ -50,7 +59,32 @@ function FollowCard({ href, icon: Icon, label, color }) {
 }
 
 export default function MediaGallery() {
-  const hasYouTube = YOUTUBE_VIDEO_IDS.length > 0;
+  // null until a fetch resolves; falls back to the curated ids on empty/error.
+  const [ytFetched, setYtFetched] = useState(null);
+
+  useEffect(() => {
+    if (!youtubeConfigured || !YT_CHANNEL) return;
+    let active = true;
+    (async () => {
+      try {
+        const uploads = await resolveUploadsPlaylist(YT_CHANNEL);
+        const items = uploads ? await fetchPlaylistVideos(uploads, 12) : [];
+        if (active && items.length) setYtFetched(items);
+      } catch {
+        /* keep the curated fallback */
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const ytList =
+    ytFetched && ytFetched.length
+      ? ytFetched
+      : YOUTUBE_VIDEO_IDS.map((id) => ({ id, title: "HariPrabodham AYF video" }));
+
+  const hasYouTube = ytList.length > 0;
   const hasInstagram = INSTAGRAM_POST_URLS.length > 0;
 
   // Load Instagram's embed script, then render the blockquotes. When several
@@ -88,13 +122,13 @@ export default function MediaGallery() {
 
         {hasYouTube ? (
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-            {YOUTUBE_VIDEO_IDS.map((id, index) => (
-              <Reveal key={id} variant="flip" delay={index * 100}>
+            {ytList.map((v, index) => (
+              <Reveal key={v.id} variant="flip" delay={index * 100}>
                 <div className="aspect-video overflow-hidden rounded-2xl shadow-lg">
                   <iframe
                     className="h-full w-full"
-                    src={`https://www.youtube.com/embed/${id}`}
-                    title={`HariPrabodham AYF video ${index + 1}`}
+                    src={`https://www.youtube.com/embed/${v.id}`}
+                    title={v.title || `HariPrabodham AYF video ${index + 1}`}
                     loading="lazy"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen
