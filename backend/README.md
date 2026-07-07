@@ -90,6 +90,69 @@ through, and the selfie is deleted after delivery (or purged after 24h if the
 link is never opened). The WhatsApp module stays in the codebase as a dormant
 alternate channel.
 
+## 2c. Telegram when the host has BLOCKED outbound egress (Worker relay)
+
+**This is the architecture the production Space actually runs.** Some free hosts
+— including the Hugging Face Space this project uses — **cannot make outbound
+connections at all**: every outbound TLS handshake to `api.telegram.org` (and
+even to a proxy) times out, and there's no IPv6. Inbound webhooks and serving
+`/media/...` still work. The direct flow in **2b** is therefore impossible here
+— the bot receives Start but can never reply.
+
+Diagnose it with `GET /debug/net?key=<TELEGRAM_WEBHOOK_SECRET>`: if every
+`tls_probe` fails (timeout / "Network is unreachable") across both IPv4 and
+IPv6, the host's egress is dead and no proxy can fix it (the proxy hop uses the
+same broken egress).
+
+The fix **inverts the flow**: a **Cloudflare Worker** (which has working egress)
+owns all Telegram I/O, and the Space only matches faces when the Worker asks —
+over inbound HTTP, which works. The Space never calls Telegram.
+
+```
+Telegram ──webhook──► Cloudflare Worker ──► Space POST /telegram/process
+                            │                    (matches faces, RETURNS urls)
+                            │◄───────────────────┘
+                            └──► Telegram sendPhoto(url)   (Worker → Telegram ✅)
+                                        │
+                                        ▼
+                            Telegram fetches the bytes from the
+                            Space's /media/... (inbound to Space ✅)
+```
+
+So nothing large leaves the Space outbound — Telegram pulls the image bytes
+itself via the Space's public `/media` URLs. The Worker source is
+`telegram-proxy-worker.js` (a full bot handler, despite the legacy filename).
+
+**Setup:**
+
+1. Deploy `telegram-proxy-worker.js` as a Cloudflare Worker (free). Set its
+   variables:
+   - `BOT_TOKEN` — the Telegram bot token (Secret)
+   - `HF_BASE` — `https://<your-space>.hf.space` (no trailing slash)
+   - `SHARED_SECRET` — must **exactly** equal the Space's `TELEGRAM_WEBHOOK_SECRET`
+   - `WEBHOOK_SECRET` — (optional) register the webhook with this `secret_token`
+     and the Worker rejects updates that don't carry it.
+   Redeploy the Worker after changing any variable (they don't hot-reload).
+2. On the Space, set:
+   - `TELEGRAM_BOT_USERNAME` — the bot @username **without @**. **Required** here
+     (the deep link is built without an outbound `getMe`, which would fail).
+   - `TELEGRAM_WEBHOOK_SECRET` — the shared secret (same value as the Worker's
+     `SHARED_SECRET`); it guards `/telegram/process`.
+   - **Unset** `TELEGRAM_BOT_TOKEN` and `TELEGRAM_API_BASE` — with no token the
+     Space skips its own (doomed) startup `setWebhook`, so the logs stay clean.
+3. Point the webhook at the Worker, from a machine that CAN reach Telegram:
+   ```bash
+   curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://<worker-url>/&secret_token=<WEBHOOK_SECRET>"
+   ```
+4. Add a **Cron Trigger** to the Worker (e.g. `*/30 * * * *`) — its `scheduled`
+   handler pings the Space's `/health` to keep the free Space warm. Without it,
+   the first request after the Space sleeps hits a ~30 s cold start (models
+   reload) that can exceed the Worker's execution budget, so the greeting sends
+   but the photos don't. Keeping it warm makes matching ~2–3 s and reliable.
+
+The Space's own `/telegram/webhook` (from 2b) is left in place but unused when
+the webhook points at the Worker.
+
 ## 3. Deploy to Hugging Face Spaces (free)
 
 The free **CPU basic** tier gives 16 GB RAM, plenty for the full-accuracy
