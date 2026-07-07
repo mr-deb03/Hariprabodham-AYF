@@ -203,6 +203,7 @@ export default function SmrutiForm() {
                   href={telegramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={reset}
                   className="btn-primary mt-7 inline-flex items-center gap-2"
                 >
                   <FaTelegramPlane className="text-lg" />
