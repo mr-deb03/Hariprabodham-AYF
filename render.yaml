@@ -32,4 +32,12 @@ services:
         value: "buffalo_l"
       - key: MATCH_THRESHOLD
         value: "0.35"
+      # --- Telegram (Bot API) ---
+      # Render has reliable outbound to api.telegram.org, so NO proxy is needed:
+      # leave TELEGRAM_API_BASE unset (defaults to the real API) and delete the
+      # Cloudflare worker. The webhook auto-registers on startup.
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false # from @BotFather (use the NEW token after revoking the old)
+      - key: TELEGRAM_WEBHOOK_SECRET
+        sync: false # any random string; Telegram echoes it back to verify calls
       # PUBLIC_BASE_URL is auto-detected from Render's RENDER_EXTERNAL_URL.
