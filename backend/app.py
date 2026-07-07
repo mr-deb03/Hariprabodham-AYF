@@ -237,6 +237,69 @@ def process_telegram_token(chat_id, fallback_name: str, token: str):
         pending.delete(token)
 
 
+def _result_for_token(token: str) -> dict:
+    """Match the selfie stored under `token` and return a delivery payload for
+    the Cloudflare Worker to relay to Telegram. Unlike process_telegram_token,
+    this NEVER talks to Telegram — used when this host's outbound egress to
+    Telegram is blocked and the Worker handles all Telegram I/O instead."""
+    entry = pending.load(token)
+    if not entry:
+        return {
+            "status": "expired",
+            "text": "This photo link has expired or was already used. Please fill "
+            "in the Smruti form on our website again. 🙏",
+        }
+    name = entry.get("firstName") or "there"
+    try:
+        urls = _match_photo_urls(entry["selfie_path"])
+    except Exception as exc:  # noqa: BLE001
+        print("[smruti][tg] process error:", exc)
+        # Keep the token so the visitor can retry the same link.
+        return {
+            "status": "error",
+            "text": "Sorry, something went wrong while finding your photos. "
+            "Please try again shortly. 🙏",
+        }
+    pending.delete(token)  # delivered (or definitively empty) — don't retain selfie
+    if not urls:
+        return {
+            "status": "none",
+            "text": f"Hi {name}, we couldn't find any photos matching your face "
+            "yet. Please submit the form again with a clearer, front-facing selfie "
+            "— we'll also keep looking as new albums are added. 🙏",
+        }
+    return {
+        "status": "sent",
+        "text": f"We found {len(urls)} photo(s) of you from our gatherings. "
+        "Sending them now…",
+        "photos": urls,
+    }
+
+
+@app.post("/telegram/process")
+async def telegram_process(request: Request, x_smruti_secret: str = Header(default="")):
+    """Called by the Cloudflare Worker (which owns all Telegram I/O because this
+    host can't reach Telegram outbound). Matches the selfie stored under a token
+    and RETURNS the photo URLs + text for the Worker to deliver. Guarded by the
+    shared secret — set it to the same value as TELEGRAM_WEBHOOK_SECRET."""
+    if (
+        settings.telegram_webhook_secret
+        and x_smruti_secret != settings.telegram_webhook_secret
+    ):
+        raise HTTPException(status_code=403, detail="bad secret")
+    body = await request.json()
+    token = (body.get("token") or "").strip()
+    if not token:
+        raise HTTPException(status_code=400, detail="missing token")
+    print(f"[smruti][tg] process token {token} for chat {body.get('chat_id')}")
+    result = _result_for_token(token)
+    print(
+        f"[smruti][tg] token {token}: {result['status']}, "
+        f"{len(result.get('photos', []))} photo(s)"
+    )
+    return {"ok": True, **result}
+
+
 @app.post("/api/smruti")
 async def smruti(
     firstName: str = Form(...),
