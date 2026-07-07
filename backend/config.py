@@ -45,6 +45,15 @@ class Settings:
     # Worker) on hosts that can't reach api.telegram.org directly — some HF
     # Spaces block outbound to Telegram while inbound webhooks still work.
     telegram_api_base: str = os.getenv("TELEGRAM_API_BASE", "https://api.telegram.org")
+    # Force outbound HTTP to resolve IPv4-only. Helps on hosts with broken IPv6
+    # egress, but HURTS on hosts where IPv4 is the blocked family (outbound TLS
+    # then fails with UNEXPECTED_EOF). Set FORCE_IPV4=0 to allow dual-stack/IPv6.
+    force_ipv4: bool = os.getenv("FORCE_IPV4", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "",
+    )
 
     # Where website submissions wait (selfie + details) for their Telegram
     # deep-link to be opened. Entries are deleted after delivery or 24h.

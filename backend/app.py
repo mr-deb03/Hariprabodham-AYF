@@ -50,6 +50,73 @@ def health():
     return {"status": "ok"}
 
 
+@app.get("/debug/net")
+def debug_net(key: str = ""):
+    """Diagnose outbound egress from this host. TLS-probes api.telegram.org and
+    the configured TELEGRAM_API_BASE over both IPv4 and IPv6, then does a real
+    HTTP request the way the app would — so we can see which path (if any) works
+    and whether FORCE_IPV4 helps or hurts here. Guarded by the webhook secret
+    when one is set. Remove/ignore once Telegram delivery is working."""
+    import socket
+    import ssl
+    from urllib.parse import urlparse
+
+    import requests
+
+    if settings.telegram_webhook_secret and key != settings.telegram_webhook_secret:
+        raise HTTPException(status_code=403, detail="bad key")
+
+    def tls_probe(host, family):
+        try:
+            infos = socket.getaddrinfo(host, 443, family, socket.SOCK_STREAM)
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "stage": "dns", "error": f"{type(exc).__name__}: {exc}"}
+        addr = infos[0][4]
+        sock = socket.socket(family, socket.SOCK_STREAM)
+        sock.settimeout(10)
+        try:
+            sock.connect(addr)
+            ctx = ssl.create_default_context()
+            with ctx.wrap_socket(sock, server_hostname=host):
+                pass
+            return {"ok": True, "addr": addr[0]}
+        except Exception as exc:  # noqa: BLE001
+            return {
+                "ok": False,
+                "stage": "connect/tls",
+                "addr": addr[0],
+                "error": f"{type(exc).__name__}: {exc}",
+            }
+        finally:
+            try:
+                sock.close()
+            except Exception:  # noqa: BLE001
+                pass
+
+    api_host = urlparse(settings.telegram_api_base).hostname or "api.telegram.org"
+    hosts = {"telegram": "api.telegram.org", "api_base": api_host}
+    result = {
+        "force_ipv4": settings.force_ipv4,
+        "telegram_api_base": settings.telegram_api_base,
+        "tls_probes": {
+            name: {
+                "host": host,
+                "ipv4": tls_probe(host, socket.AF_INET),
+                "ipv6": tls_probe(host, socket.AF_INET6),
+            }
+            for name, host in hosts.items()
+        },
+    }
+
+    # End-to-end HTTP as the app actually issues it (honours FORCE_IPV4 patch).
+    try:
+        r = requests.get(f"{settings.telegram_api_base.rstrip('/')}/", timeout=15)
+        result["http_get_api_base"] = {"ok": True, "status": r.status_code}
+    except Exception as exc:  # noqa: BLE001
+        result["http_get_api_base"] = {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
+    return result
+
+
 def _chunks(items, size):
     for i in range(0, len(items), size):
         yield items[i : i + size]

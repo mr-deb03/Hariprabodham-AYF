@@ -22,7 +22,12 @@ from config import settings
 # handshakes to IPv6 destinations fail with "UNEXPECTED_EOF" or time out, while
 # IPv4 works fine. Force urllib3 (used by requests) to resolve to IPv4 only —
 # this fixes outbound to both api.telegram.org and the Cloudflare proxy.
-_urllib3_conn.allowed_gai_family = lambda: socket.AF_INET
+#
+# But the opposite happens too: on some hosts IPv4 is the blocked family, and
+# forcing it CAUSES the UNEXPECTED_EOF. Gate it behind FORCE_IPV4 so it can be
+# toggled per host without a code change (see /debug/net to find which works).
+if settings.force_ipv4:
+    _urllib3_conn.allowed_gai_family = lambda: socket.AF_INET
 
 _BASE = settings.telegram_api_base.rstrip("/")
 API = f"{_BASE}/bot{settings.telegram_bot_token}"
