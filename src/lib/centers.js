@@ -6,7 +6,9 @@ export const CENTERS = [
   "Vikhroli",
   "Mulund",
   "Nerul",
+  "Dombivali",
   "Kalyan",
+  "Ambivali",
   "Badlapur",
   "Rajasthan",
 ];
