@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import Reveal from "./Reveal";
+import React, { useRef, useState } from "react";
+import SectionHeading from "./SectionHeading";
 import Tilt from "./Tilt";
 import swaminarayanImg from "../assets/parampara/swaminarayan-bhagwan.webp";
 import gunatitanandImg from "../assets/parampara/gunatitanand-swami.webp";
@@ -115,62 +115,107 @@ function Portrait({ guru, big = false }) {
 export default function ParamparaLineage() {
   const [active, setActive] = useState(0);
   const guru = lineage[active];
+  const tabRefs = useRef([]);
+
   const go = (dir) =>
     setActive((a) => (a + dir + lineage.length) % lineage.length);
 
+  // A tablist is expected to move with the arrow keys, with only the selected
+  // tab in the tab order (roving tabindex) — otherwise a keyboard user has to
+  // tab through every guru to reach the panel.
+  const onTabKeyDown = (e) => {
+    const map = { ArrowRight: 1, ArrowLeft: -1 };
+    if (e.key in map) {
+      e.preventDefault();
+      const next = (active + map[e.key] + lineage.length) % lineage.length;
+      setActive(next);
+      tabRefs.current[next]?.focus();
+    } else if (e.key === "Home" || e.key === "End") {
+      e.preventDefault();
+      const next = e.key === "Home" ? 0 : lineage.length - 1;
+      setActive(next);
+      tabRefs.current[next]?.focus();
+    }
+  };
+
   return (
-    <section className="relative overflow-hidden bg-softGray py-20 px-6 md:px-12">
+    <section className="relative overflow-hidden bg-softGray section">
       {/* Decorative blobs */}
-      <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primaryBrown/5" />
-      <div className="pointer-events-none absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-primaryBrown/5" />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-primaryBrown/5"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-primaryBrown/5"
+      />
 
       <div className="relative mx-auto max-w-6xl">
-        <Reveal className="mx-auto mb-12 max-w-3xl text-center">
-          <p className="text-lg leading-relaxed text-textSoft">
-            Bhagwan Swaminarayan manifested over two hundred years ago to
-            establish a community dedicated to spiritual growth, selfless
-            service, and interfaith harmony. That divine light continues today
-            through an unbroken lineage of Gunatit gurus.
-          </p>
-        </Reveal>
+        <SectionHeading
+          eyebrow="Parampara"
+          title="An unbroken lineage"
+          lede="Bhagwan Swaminarayan manifested over two hundred years ago to establish a community dedicated to spiritual growth, selfless service, and interfaith harmony. That divine light continues today through an unbroken lineage of Gunatit gurus."
+          className="mb-14"
+        />
 
-        {/* PORTRAIT TABS */}
-        <div className="mb-12 flex gap-6 overflow-x-auto px-2 py-4 md:justify-center">
-          {lineage.map((g, i) => (
-            <button
-              key={g.name}
-              type="button"
-              onClick={() => setActive(i)}
-              aria-pressed={i === active}
-              className={`flex shrink-0 flex-col items-center gap-2 transition-all duration-300 ${
-                i === active ? "" : "opacity-60 hover:opacity-100"
-              }`}
-            >
-              <span
-                className={`block h-20 w-20 overflow-hidden rounded-full bg-gradient-to-br from-softGray to-cream ring-offset-2 ring-offset-softGray transition-all duration-300 ${
-                  i === active
-                    ? "scale-110 ring-2 ring-primaryBrown"
-                    : "ring-1 ring-primaryBrown/20"
+        {/* PORTRAIT TABS — a connecting rule behind the portraits reads the row
+            as a succession rather than a plain strip of buttons. */}
+        <div className="relative mb-12">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-0 right-0 top-[3.25rem] hidden h-px bg-gradient-to-r from-transparent via-bronze/30 to-transparent md:block"
+          />
+          <div
+            role="tablist"
+            aria-label="Gunatit gurus"
+            onKeyDown={onTabKeyDown}
+            className="relative flex gap-6 overflow-x-auto px-2 py-4 md:justify-center"
+          >
+            {lineage.map((g, i) => (
+              <button
+                key={g.name}
+                type="button"
+                role="tab"
+                id={`guru-tab-${i}`}
+                aria-selected={i === active}
+                aria-controls="guru-panel"
+                tabIndex={i === active ? 0 : -1}
+                ref={(el) => (tabRefs.current[i] = el)}
+                onClick={() => setActive(i)}
+                className={`flex shrink-0 flex-col items-center gap-2 transition-all duration-300 ${
+                  i === active ? "" : "opacity-60 hover:opacity-100"
                 }`}
               >
-                <Portrait guru={g} />
-              </span>
-              <span
-                className={`w-24 text-center text-xs leading-tight ${
-                  i === active
-                    ? "font-semibold text-primaryBrown"
-                    : "text-textMuted"
-                }`}
-              >
-                {g.short}
-              </span>
-            </button>
-          ))}
+                <span
+                  className={`block h-20 w-20 overflow-hidden rounded-full bg-gradient-to-br from-softGray to-cream ring-offset-2 ring-offset-softGray transition-all duration-300 ${
+                    i === active
+                      ? "scale-110 ring-2 ring-primaryBrown"
+                      : "ring-1 ring-primaryBrown/20"
+                  }`}
+                >
+                  <Portrait guru={g} />
+                </span>
+                <span
+                  className={`w-24 text-center text-xs leading-tight ${
+                    i === active
+                      ? "font-semibold text-primaryBrown"
+                      : "text-textMuted"
+                  }`}
+                >
+                  {g.short}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* DETAIL PANEL — re-keyed so it re-animates on every change */}
         <div
           key={active}
+          id="guru-panel"
+          role="tabpanel"
+          aria-labelledby={`guru-tab-${active}`}
+          tabIndex={0}
           className="animate-panel grid grid-cols-1 items-center gap-10 rounded-3xl bg-white p-8 shadow-lg md:grid-cols-2 md:p-12"
         >
           <Tilt className="mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-2xl bg-gradient-to-br from-softGray to-cream shadow-xl">
