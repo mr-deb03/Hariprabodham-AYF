@@ -23,14 +23,14 @@ const AboutUs = () => {
             <h2 className="mb-6 text-3xl font-medium leading-tight text-primaryBrown md:text-4xl">
               The Hariprabodham Parivar
             </h2>
-            <p className="mb-4 text-lg leading-relaxed text-gray-600">
+            <p className="mb-4 text-lg leading-relaxed text-textSoft">
               HariPrabodham Atmiya Youth Foundation, Bhandup is part of the global
               Hariprabodham Parivar &mdash; created through the vision and
               blessings of His Divine Holiness Guruhari Hariprasad Swamiji
               Maharaj, and guided today by His Divine Holiness Pragat Guruhari
               Prabodh Swamiji Maharaj.
             </p>
-            <p className="text-lg leading-relaxed text-gray-600">
+            <p className="text-lg leading-relaxed text-textSoft">
               Comprised entirely of devoted volunteers, we endeavour to uplift
               the individual, the family and society through positive living and
               spirituality &mdash; rooted in faith in Bhagwan Shree Swaminarayan.
@@ -50,15 +50,20 @@ const AboutUs = () => {
       </section>
 
       {/* SUHRADBHAV PHILOSOPHY */}
-      <section className="bg-gradient-to-br from-logoCrimson via-logoMagenta to-logoBlue py-20 px-6 md:px-12 text-white">
-        <Reveal className="mx-auto max-w-4xl text-center">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.25em] text-gold/90">
+      {/* The raw logo gradient is too light for text at its crimson end — gold
+          sat at 2.0:1 and the quote at 4.0:1. A 20% dark scrim deepens the
+          gradient and lifts every element clear of AA (sand 5.4, heading 6.3,
+          quote 6.7) without touching the brand hues. */}
+      <section className="on-dark relative overflow-hidden bg-gradient-to-br from-logoCrimson via-logoMagenta to-logoBlue px-6 py-20 md:px-12">
+        <div aria-hidden="true" className="absolute inset-0 bg-black/20" />
+        <Reveal className="relative z-10 mx-auto max-w-4xl text-center">
+          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.25em] text-sand">
             Our Guiding Spirit
           </p>
           <h3 className="mb-6 font-display text-4xl text-onDark md:text-5xl">
             Suhradbhav
           </h3>
-          <p className="text-lg italic leading-relaxed text-white/90 md:text-xl">
+          <p className="text-lg italic leading-relaxed text-white md:text-xl">
             &ldquo;Regardless of any shortcomings perceived in another, we seek
             only their virtues &mdash; accepting everyone wholeheartedly and
             finding joy in every situation.&rdquo;
@@ -76,7 +81,7 @@ const AboutUs = () => {
             <h3 className="mb-3 text-2xl font-semibold text-primaryBrown">
               Our Mission
             </h3>
-            <p className="leading-relaxed text-gray-600">
+            <p className="leading-relaxed text-textSoft">
               To serve the individual, family, society and environment with a
               wide range of humanitarian and spiritual activities, based on our
               deep-rooted faith in Bhagwan Shree Swaminarayan, to enable the
@@ -91,7 +96,7 @@ const AboutUs = () => {
             <h3 className="mb-3 text-2xl font-semibold text-primaryBrown">
               Our Vision
             </h3>
-            <p className="leading-relaxed text-gray-600">
+            <p className="leading-relaxed text-textSoft">
               To serve society through spiritual services, cultural training and
               human services such as healthcare and education on a secular basis
               &mdash; promoting community development, family values, literacy,

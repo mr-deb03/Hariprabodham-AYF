@@ -2,17 +2,7 @@ import React from "react";
 import { FaInstagram, FaYoutube } from "react-icons/fa";
 import logo from "../assets/common/HPAYF logo.webp";
 import Reveal from "./Reveal";
-
-const centers = [
-  "Bhandup",
-  "Ghatkopar",
-  "Vikhroli",
-  "Mulund",
-  "Nerul",
-  "Kalyan",
-  "Badlapur",
-  "Rajasthan",
-];
+import { CENTERS as centers } from "../lib/centers";
 
 const Footer = () => {
   return (
@@ -44,13 +34,6 @@ const Footer = () => {
 
         {/* Right */}
         <div className="space-y-4">
-          <div>
-            <h4 className="font-semibold">Enquiries:</h4>
-            <p className="text-mutedBlue">
-              enquiry@hariprabodhambh.org
-            </p>
-          </div>
-
           <div>
             <h4 className="font-semibold mb-2">
               Find us on Social Media:

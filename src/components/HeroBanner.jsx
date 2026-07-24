@@ -15,17 +15,37 @@ export default function HeroBanner() {
   // Defer downloading the other slides until after first paint so the first
   // (above-the-fold) image loads first instead of competing with the rest.
   const [loadRest, setLoadRest] = useState(false);
+  // Auto-advancing content must be pausable (WCAG 2.2.2). Hovering or
+  // keyboard-focusing the hero halts the cycle, and readers who asked for
+  // reduced motion never get an automatic change at all — previously only the
+  // crossfade honoured that setting while the slides kept moving regardless.
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     setLoadRest(true);
+  }, []);
+
+  useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced || paused) return undefined;
+
     const id = setInterval(() => {
       setIndex((i) => (i + 1) % slides.length);
     }, SLIDE_INTERVAL);
     return () => clearInterval(id);
-  }, []);
+  }, [paused]);
 
   return (
-    <section id="home" className="relative aspect-[16/9] w-full overflow-hidden">
+    <section
+      id="home"
+      aria-roledescription="carousel"
+      aria-label="HariPrabodham highlights"
+      className="relative aspect-[16/9] w-full overflow-hidden"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={() => setPaused(false)}
+    >
       {/* Crossfading slides — each fills the 16:9 frame edge-to-edge. */}
       {slides.map((src, i) => (
         <img

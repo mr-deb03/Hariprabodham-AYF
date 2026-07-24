@@ -9,11 +9,21 @@
   --gold: #d4af37;
   --saffron: #e08a1e;
   --maroon: #7a2e2e;
-  --bronze: #a97142;
+  --bronze: #96643b;
   --ink: #2b2b2b;
   --text-soft: #5e5e5e;
-  --text-muted: #757575;
+  --text-muted: #6f6f6f;
   --on-dark: #faf8f5;
+
+  /* Text-safe variants — --gold and --saffron are decorative only (2.0:1 and
+     2.4:1 as text). Use these when the colour carries meaning in type. */
+  --gold-text: #856d1d;
+  --saffron-text: #9e6215;
+
+  /* Logo gradient stops */
+  --logo-crimson: #e01e5a;
+  --logo-magenta: #c2186f;
+  --logo-blue: #1e3a8a;
 }
 
 @layer base {
@@ -64,6 +74,25 @@
   ::selection {
     background: rgba(212, 175, 55, 0.25);
     color: var(--maroon);
+  }
+
+  /* Keyboard focus. :focus-visible only fires for keyboard/AT users, so mouse
+     clicks stay clean while tabbing is fully traceable. Maroon reads at 8.8:1
+     on every light surface; sections with a dark maroon background opt into the
+     gold ring via .on-dark, since maroon-on-maroon would be invisible. */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 3px solid var(--maroon);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  .on-dark :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline-color: var(--gold);
+  }
+
+  /* Never leave a focused element hidden behind the fixed navbar. */
+  :focus-visible {
+    scroll-margin-top: 7rem;
   }
 }
 
@@ -150,6 +179,51 @@
     -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.4);
+  }
+
+  /* Brand-gradient panel. The raw logo gradient is far too light at its crimson
+     end for text — white lands at 4.66:1 and anything tinted or faded fails
+     outright. The built-in scrim buys every child ~1.4x contrast, so sections
+     using this never have to solve it again. Always pair with .on-dark. */
+  .panel-gradient {
+    position: relative;
+    isolation: isolate;
+    background-image: linear-gradient(
+      to bottom right,
+      var(--logo-crimson),
+      var(--logo-magenta),
+      var(--logo-blue)
+    );
+  }
+  .panel-gradient::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-color: rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+  }
+
+  /* Consistent vertical rhythm for page sections. */
+  .section {
+    padding-block: 6rem;
+    padding-inline: 1.5rem;
+  }
+  @media (min-width: 768px) {
+    .section {
+      padding-inline: 5rem;
+    }
+  }
+
+  /* Body copy inside a section — capped for a comfortable measure (~70ch). */
+  .section-lede {
+    max-width: 42rem;
+    color: var(--text-soft);
+    font-size: 1.0625rem;
+    line-height: 1.75;
+  }
+  .on-dark .section-lede {
+    color: #ffffff;
   }
 }
 

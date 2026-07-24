@@ -2,6 +2,7 @@ import React from "react";
 import aboutBg from "../assets/home/about-bg.webp";
 import aboutImage from "../assets/home/about-photo.webp";
 import Reveal from "./Reveal";
+import SectionHeading from "./SectionHeading";
 import Tilt from "./Tilt";
 
 export default function AboutSection() {
@@ -18,34 +19,48 @@ export default function AboutSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
           {/* LEFT: TEXT */}
-          <Reveal variant="left" className="text-white">
-            <p className="text-sm tracking-widest opacity-80 mb-6">
-              ABOUT US
-            </p>
+          <div className="on-dark">
+            <SectionHeading
+              eyebrow="About Us"
+              title="Rooted in devotion, built for youth"
+              tone="dark"
+              align="left"
+            />
 
-            <p className="text-lg leading-relaxed text-white/90">
-              <span className="font-semibold">
-                HariPrabodham Atmiya Youth Foundation
-              </span>{" "}
-              is a Hindu spiritual and humanitarian organization founded on the principles of 
-              Akshar–Purushottam Upasana. Inspired by devotion to Lord Swaminarayan, the organization 
-              is dedicated to fostering spiritual awareness, moral values, and community upliftment 
-              through faith, service, and unity.
-              <br /><br />
-              Founded in 1974 by{" "}
-              <span className="font-semibold">
-              His Divine Holiness Guruhari Hariprasad Swamiji
-              </span>
-              , HariPrabodham has expanded into a global movement with hundreds of centers across the world.
-              <br /><br />
-             Today, under the spiritual guidance of{" "}
-              <span className="font-semibold">
-                His Divine Holiness Pragat Guruhari Prabodh Swamiji Maharaj
-              </span>
-              , the organization continues to promote spiritual growth, cultural heritage, 
-              youth empowerment, and selfless humanitarian service.
-            </p>
-          </Reveal>
+            {/* Three real paragraphs rather than one <p> split by <br /><br />,
+                so screen readers announce them as separate passages. Full white
+                instead of white/90 — the copy sits on a photo, where every bit
+                of contrast counts. */}
+            <Reveal variant="left" className="mt-6 space-y-5 text-lg leading-relaxed text-white">
+              <p>
+                <span className="font-semibold">
+                  HariPrabodham Atmiya Youth Foundation
+                </span>{" "}
+                is a Hindu spiritual and humanitarian organization founded on the
+                principles of Akshar–Purushottam Upasana. Inspired by devotion to
+                Lord Swaminarayan, the organization is dedicated to fostering
+                spiritual awareness, moral values, and community upliftment
+                through faith, service, and unity.
+              </p>
+              <p>
+                Founded in 1974 by{" "}
+                <span className="font-semibold">
+                  His Divine Holiness Guruhari Hariprasad Swamiji
+                </span>
+                , HariPrabodham has expanded into a global movement with hundreds
+                of centers across the world.
+              </p>
+              <p>
+                Today, under the spiritual guidance of{" "}
+                <span className="font-semibold">
+                  His Divine Holiness Pragat Guruhari Prabodh Swamiji Maharaj
+                </span>
+                , the organization continues to promote spiritual growth,
+                cultural heritage, youth empowerment, and selfless humanitarian
+                service.
+              </p>
+            </Reveal>
+          </div>
 
           {/* RIGHT: IMAGE */}
           <Reveal variant="right" className="flex justify-center lg:justify-end" delay={150}>

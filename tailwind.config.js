@@ -20,15 +20,21 @@ export default {
         ivory: "#FFF8F0", // primary background
         cream: "#F8F3E8", // secondary background
         sand: "#F5E6C8", // gradient accent
-        gold: "#D4AF37", // divine gold
+        gold: "#D4AF37", // divine gold — decorative fills/borders only, 2.0:1 as text
         goldDark: "#C19B2E", // richer gold (hover)
-        saffron: "#E08A1E", // deep saffron
+        saffron: "#E08A1E", // deep saffron — decorative only, 2.4:1 as text
         maroon: "#7A2E2E", // temple maroon
         maroonDark: "#5C2121", // deep maroon (gradient end)
-        bronze: "#A97142", // sacred bronze
+        bronze: "#96643B", // sacred bronze — darkened from #A97142 for WCAG AA (4.54:1 on cream)
         ink: "#2B2B2B", // primary text
         textSoft: "#5E5E5E", // secondary text
-        textMuted: "#757575", // muted text
+        textMuted: "#6F6F6F", // muted text — darkened from #757575 for WCAG AA (4.54:1 on cream)
+
+        // Accessible text-safe variants of the decorative brand colours. Use
+        // these whenever gold/saffron carry meaning as TEXT or as an icon that
+        // isn't purely ornamental — the originals fail AA badly (2.0:1, 2.4:1).
+        goldText: "#856D1D", // 4.52:1 on cream
+        saffronText: "#9E6215", // 4.51:1 on cream
         onDark: "#FAF8F5", // text on dark sections
 
         // Legacy aliases → remapped to the new palette

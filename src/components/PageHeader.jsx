@@ -27,12 +27,20 @@ export default function PageHeader({ title, subtitle, current }) {
         )}
 
         {/* Breadcrumb */}
-        <nav className="mt-6 flex items-center justify-center gap-2 text-sm text-textSoft">
-          <Link to="/" className="transition-colors hover:text-gold">
+        <nav
+          aria-label="Breadcrumb"
+          className="mt-6 flex items-center justify-center gap-2 text-sm text-textSoft"
+        >
+          {/* goldText, not gold — plain gold is 2.0:1 here and unreadable. */}
+          <Link to="/" className="transition-colors duration-200 hover:text-goldText">
             Home
           </Link>
-          <span className="text-gold">/</span>
-          <span className="font-medium text-maroon">{current}</span>
+          <span aria-hidden="true" className="text-bronze">
+            /
+          </span>
+          <span className="font-medium text-maroon" aria-current="page">
+            {current}
+          </span>
         </nav>
       </Reveal>
     </section>

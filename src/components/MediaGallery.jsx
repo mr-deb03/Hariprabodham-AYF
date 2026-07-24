@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { FaYoutube, FaInstagram } from "react-icons/fa";
 import Reveal from "./Reveal";
+import SectionHeading from "./SectionHeading";
 import {
   fetchPlaylistVideos,
   resolveUploadsPlaylist,
   youtubeConfigured,
 } from "../lib/youtube";
+import { fetchInstagramPosts, instagramConfigured } from "../lib/instagram";
 
 // When a channel + API key are configured the gallery auto-pulls the latest
 // public uploads; otherwise it falls back to the hand-picked ids below.
@@ -14,7 +16,10 @@ const YT_CHANNEL = process.env.REACT_APP_YT_CHANNEL_ID;
 /*
  * Videos & posts from our social channels, embedded on the Events page.
  *
- * To add content, just paste links into the two arrays below:
+ * Both sections auto-update when configured — YouTube via the Data API key,
+ * Instagram via the `instagram-feed` Edge Function (see supabase/SETUP.md § 7).
+ * The arrays below are the fallback shown when a feed isn't set up or is
+ * temporarily unreachable, so it's worth keeping a few good ones here:
  *   - YOUTUBE_VIDEO_IDS: the 11-char id from a video URL
  *       https://www.youtube.com/watch?v=ABCDEFGHIJK  ->  "ABCDEFGHIJK"
  *       https://youtu.be/ABCDEFGHIJK                 ->  "ABCDEFGHIJK"
@@ -61,6 +66,7 @@ function FollowCard({ href, icon: Icon, label, color }) {
 export default function MediaGallery() {
   // null until a fetch resolves; falls back to the curated ids on empty/error.
   const [ytFetched, setYtFetched] = useState(null);
+  const [igFetched, setIgFetched] = useState(null);
 
   useEffect(() => {
     if (!youtubeConfigured || !YT_CHANNEL) return;
@@ -79,19 +85,45 @@ export default function MediaGallery() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!instagramConfigured) return;
+    let active = true;
+    (async () => {
+      try {
+        const posts = await fetchInstagramPosts(9);
+        if (active && posts.length) setIgFetched(posts);
+      } catch {
+        /* keep the curated fallback */
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const ytList =
     ytFetched && ytFetched.length
       ? ytFetched
       : YOUTUBE_VIDEO_IDS.map((id) => ({ id, title: "HariPrabodham AYF video" }));
 
+  const igList =
+    igFetched && igFetched.length
+      ? igFetched
+      : INSTAGRAM_POST_URLS.map((permalink) => ({ id: permalink, permalink }));
+
   const hasYouTube = ytList.length > 0;
-  const hasInstagram = INSTAGRAM_POST_URLS.length > 0;
+  const hasInstagram = igList.length > 0;
+
+  // Re-run the embed processing whenever the post list actually changes — the
+  // fetched feed swaps the blockquotes out after mount, and IG only renders
+  // what was in the DOM the last time it was asked to process.
+  const igKey = igList.map((p) => p.id).join(",");
 
   // Load Instagram's embed script, then render the blockquotes. When several
   // embeds are on one page IG often renders only some on the first pass, so we
   // nudge it to (re)process a few times until all of them resolve.
   useEffect(() => {
-    if (!hasInstagram) return;
+    if (!igKey) return;
     const SRC = "https://www.instagram.com/embed.js";
     const process = () => window.instgrm && window.instgrm.Embeds.process();
     if (!document.querySelector(`script[src="${SRC}"]`)) {
@@ -100,25 +132,23 @@ export default function MediaGallery() {
       script.async = true;
       script.onload = process;
       document.body.appendChild(script);
+    } else {
+      process();
     }
     const timers = [300, 1200, 3000].map((delay) => setTimeout(process, delay));
     return () => timers.forEach(clearTimeout);
-  }, [hasInstagram]);
+  }, [igKey]);
 
   return (
     <section className="bg-white py-20 px-6 md:px-20">
       <div className="mx-auto max-w-6xl">
         {/* YouTube */}
-        <Reveal
-          as="h2"
-          className="mb-3 text-center text-3xl font-medium text-primaryBrown md:text-4xl"
-        >
-          Watch our gatherings
-        </Reveal>
-        <Reveal className="mb-12 text-center text-mutedBlue">
-          Moments from our events, festivals and seva — straight from our YouTube
-          channel.
-        </Reveal>
+        <SectionHeading
+          eyebrow="Video"
+          title="Watch our gatherings"
+          lede="Moments from our events, festivals and seva — straight from our YouTube channel."
+          className="mb-12"
+        />
 
         {hasYouTube ? (
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
@@ -149,24 +179,20 @@ export default function MediaGallery() {
         )}
 
         {/* Instagram */}
-        <Reveal
-          as="h2"
-          className="mb-3 mt-24 text-center text-3xl font-medium text-primaryBrown md:text-4xl"
-        >
-          From our Instagram
-        </Reveal>
-        <Reveal className="mb-12 text-center text-mutedBlue">
-          Follow along for reels, updates and glimpses of youth life at
-          HariPrabodham.
-        </Reveal>
+        <SectionHeading
+          eyebrow="Social"
+          title="From our Instagram"
+          lede="Follow along for reels, updates and glimpses of youth life at HariPrabodham."
+          className="mb-12 mt-24"
+        />
 
         {hasInstagram ? (
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {INSTAGRAM_POST_URLS.map((url, index) => (
-              <Reveal key={url} variant="flip" delay={index * 100}>
+            {igList.map((post, index) => (
+              <Reveal key={post.id} variant="flip" delay={index * 100}>
                 <blockquote
                   className="instagram-media"
-                  data-instgrm-permalink={url}
+                  data-instgrm-permalink={post.permalink}
                   data-instgrm-version="14"
                   style={{ width: "100%", margin: 0 }}
                 />

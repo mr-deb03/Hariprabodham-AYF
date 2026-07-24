@@ -1,5 +1,6 @@
 import React from "react";
 import Reveal from "./Reveal";
+import SectionHeading from "./SectionHeading";
 import Tilt from "./Tilt";
 
 // TODO: swap these placeholder images for real event photos.
@@ -21,11 +22,13 @@ const events = [
 
 const Events = () => {
   return (
-    <section id="events" className="bg-softGray py-20 px-6 md:px-20">
-
-      <Reveal as="h2" className="text-3xl md:text-4xl font-medium text-primaryBrown mb-16 text-center">
-        Upcoming Events & Activities
-      </Reveal>
+    <section id="events" className="bg-softGray section">
+      <SectionHeading
+        eyebrow="What's On"
+        title="Upcoming Events & Activities"
+        lede="Festivals, workshops and seva through the year — everyone is welcome."
+        className="mb-16"
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
         {events.map((event, index) => (
