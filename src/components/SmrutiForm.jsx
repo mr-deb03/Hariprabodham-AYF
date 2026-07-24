@@ -25,12 +25,23 @@ import Reveal from "./Reveal";
  * without actually sending anything.
  */
 const SMRUTI_ENDPOINT = process.env.REACT_APP_SMRUTI_ENDPOINT;
+// Cloudflare Worker route that delivers the matched photos over WhatsApp.
+// When set, photos are sent straight to the visitor's number and no Telegram
+// step is needed. Blank → fall back to the Telegram deep-link flow.
+const SMRUTI_WA_ENDPOINT = process.env.REACT_APP_SMRUTI_WA_ENDPOINT || "";
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024; // 10 MB
 
 const emptyForm = {
   firstName: "",
   lastName: "",
   ayfCode: "",
+  mobile: "",
+};
+
+// Accept a 10-digit Indian mobile, optionally with +91 / 0 / spaces.
+const isValidMobile = (v) => {
+  const d = String(v || "").replace(/\D/g, "");
+  return /^[6-9]\d{9}$/.test(d) || /^91[6-9]\d{9}$/.test(d);
 };
 
 const steps = [
@@ -59,6 +70,7 @@ export default function SmrutiForm() {
   const [status, setStatus] = useState("idle"); // idle | submitting | success | error
   const [error, setError] = useState("");
   const [telegramUrl, setTelegramUrl] = useState("");
+  const [sentToWhatsApp, setSentToWhatsApp] = useState(false);
   const fileInputRef = useRef(null);
 
   // Release the object URL when the preview changes or the component unmounts.
@@ -95,6 +107,10 @@ export default function SmrutiForm() {
       setError("Please upload a photo of your face.");
       return;
     }
+    if (SMRUTI_WA_ENDPOINT && !isValidMobile(form.mobile)) {
+      setError("Please enter a valid 10-digit WhatsApp number.");
+      return;
+    }
     if (!consent) {
       setError("Please tick the consent box so we can match and send your photos.");
       return;
@@ -114,6 +130,23 @@ export default function SmrutiForm() {
         if (!res.ok) throw new Error(`Request failed (${res.status})`);
         const result = await res.json().catch(() => ({}));
         setTelegramUrl(result.telegramUrl || "");
+
+        // Hand the token to the Worker, which matches the faces and sends the
+        // photos to WhatsApp. It acks straight away and delivers in the
+        // background, so we don't block on face matching here.
+        if (SMRUTI_WA_ENDPOINT && result.token) {
+          const waRes = await fetch(SMRUTI_WA_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              token: result.token,
+              mobile: form.mobile,
+              name: form.firstName,
+            }),
+          });
+          if (!waRes.ok) throw new Error("Could not queue your WhatsApp delivery.");
+          setSentToWhatsApp(true);
+        }
       } else {
         // DEMO mode — no backend wired yet. Simulate processing so the flow
         // can be previewed. Remove once REACT_APP_SMRUTI_ENDPOINT is set.
@@ -140,6 +173,7 @@ export default function SmrutiForm() {
     setStatus("idle");
     setError("");
     setTelegramUrl("");
+    setSentToWhatsApp(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -149,10 +183,10 @@ export default function SmrutiForm() {
         {/* LEFT — how it works */}
         <Reveal variant="left">
           <p className="eyebrow mb-4">Smruti · Memories</p>
-          <h2 className="mb-6 text-3xl font-medium text-primaryBrown md:text-4xl">
+          <h2 className="mb-6 font-display text-3xl font-semibold text-maroon md:text-4xl lg:text-5xl">
             Find your photos from our gatherings
           </h2>
-          <p className="mb-10 text-lg leading-relaxed text-gray-600">
+          <p className="mb-10 text-lg leading-relaxed text-textSoft">
             Upload a clear photo of yourself and we'll search our event albums
             for pictures of you — then deliver them to you on Telegram.
           </p>
@@ -176,7 +210,7 @@ export default function SmrutiForm() {
             })}
           </div>
 
-          <p className="mt-10 rounded-xl bg-white/70 p-4 text-sm leading-relaxed text-gray-500">
+          <p className="mt-10 rounded-xl bg-white/70 p-4 text-sm leading-relaxed text-textMuted">
             <FaIdBadge className="mr-2 inline text-primaryBrown" />
             Your photo is used only to identify you in our event albums, and is
             deleted once your photos are sent. We never share it with anyone else.
@@ -189,30 +223,53 @@ export default function SmrutiForm() {
             <div className="flex h-full flex-col items-center justify-center rounded-2xl bg-white p-10 text-center shadow-lg">
               <FaCheckCircle className="mb-5 text-5xl text-green-500" />
               <h3 className="mb-3 text-2xl font-semibold text-primaryBrown">
-                One last step{form.firstName ? `, ${form.firstName}` : ""}!
+                {sentToWhatsApp
+                  ? `Thank you${form.firstName ? `, ${form.firstName}` : ""}!`
+                  : `One last step${form.firstName ? `, ${form.firstName}` : ""}!`}
               </h3>
-              <p className="max-w-sm leading-relaxed text-gray-600">
-                Tap below to open our Telegram bot and press{" "}
-                <span className="font-semibold text-primaryBrown">Start</span>.
-                We'll match your face across our albums and send your photos
-                right there. 🙏
-              </p>
 
-              {telegramUrl ? (
-                <a
-                  href={telegramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={reset}
-                  className="btn-primary mt-7 inline-flex items-center gap-2"
-                >
-                  <FaTelegramPlane className="text-lg" />
-                  Open my photos on Telegram
-                </a>
+              {sentToWhatsApp ? (
+                <>
+                  <p className="max-w-sm leading-relaxed text-textSoft">
+                    We're matching your face across our albums and will send
+                    your photos to{" "}
+                    <span className="font-semibold text-primaryBrown">
+                      {form.mobile}
+                    </span>{" "}
+                    on WhatsApp shortly. It usually takes under a minute. 🙏
+                  </p>
+                  <p className="mt-5 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
+                    Nothing else to do — just keep an eye on WhatsApp.
+                  </p>
+                </>
               ) : (
-                <p className="mt-7 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                  Telegram delivery isn't configured yet (demo mode).
-                </p>
+                <>
+                  <p className="max-w-sm leading-relaxed text-textSoft">
+                    Tap below to open our Telegram bot and press{" "}
+                    <span className="font-semibold text-primaryBrown">
+                      Start
+                    </span>
+                    . We'll match your face across our albums and send your
+                    photos right there. 🙏
+                  </p>
+
+                  {telegramUrl ? (
+                    <a
+                      href={telegramUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={reset}
+                      className="btn-primary mt-7 inline-flex items-center gap-2"
+                    >
+                      <FaTelegramPlane className="text-lg" />
+                      Open my photos on Telegram
+                    </a>
+                  ) : (
+                    <p className="mt-7 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                      Telegram delivery isn't configured yet (demo mode).
+                    </p>
+                  )}
+                </>
               )}
 
               <button
@@ -232,7 +289,7 @@ export default function SmrutiForm() {
                 <div>
                   <label
                     htmlFor="firstName"
-                    className="mb-1 block text-sm font-medium text-gray-700"
+                    className="mb-1 block text-sm font-medium text-ink"
                   >
                     First name
                   </label>
@@ -243,14 +300,14 @@ export default function SmrutiForm() {
                     required
                     value={form.firstName}
                     onChange={handleChange}
-                    className="w-full rounded-lg border border-gray-200 px-4 py-3 text-gray-800 outline-none transition focus:border-primaryBrown focus:ring-2 focus:ring-primaryBrown/20"
+                    className="w-full rounded-lg border border-bronze/20 px-4 py-3 text-ink outline-none transition focus:border-primaryBrown focus:ring-2 focus:ring-primaryBrown/20"
                     placeholder="First name"
                   />
                 </div>
                 <div>
                   <label
                     htmlFor="lastName"
-                    className="mb-1 block text-sm font-medium text-gray-700"
+                    className="mb-1 block text-sm font-medium text-ink"
                   >
                     Last name
                   </label>
@@ -261,7 +318,7 @@ export default function SmrutiForm() {
                     required
                     value={form.lastName}
                     onChange={handleChange}
-                    className="w-full rounded-lg border border-gray-200 px-4 py-3 text-gray-800 outline-none transition focus:border-primaryBrown focus:ring-2 focus:ring-primaryBrown/20"
+                    className="w-full rounded-lg border border-bronze/20 px-4 py-3 text-ink outline-none transition focus:border-primaryBrown focus:ring-2 focus:ring-primaryBrown/20"
                     placeholder="Last name"
                   />
                 </div>
@@ -270,7 +327,7 @@ export default function SmrutiForm() {
               <div>
                 <label
                   htmlFor="ayfCode"
-                  className="mb-1 block text-sm font-medium text-gray-700"
+                  className="mb-1 block text-sm font-medium text-ink"
                 >
                   AYF code
                 </label>
@@ -281,19 +338,46 @@ export default function SmrutiForm() {
                   required
                   value={form.ayfCode}
                   onChange={handleChange}
-                  className="w-full rounded-lg border border-gray-200 px-4 py-3 text-gray-800 outline-none transition focus:border-primaryBrown focus:ring-2 focus:ring-primaryBrown/20"
-                  placeholder="e.g. AYF-1234"
+                  className="w-full rounded-lg border border-bronze/20 px-4 py-3 text-ink outline-none transition focus:border-primaryBrown focus:ring-2 focus:ring-primaryBrown/20"
+                  placeholder="e.g. HKXXXX"
+
                 />
               </div>
 
+              {SMRUTI_WA_ENDPOINT && (
+                <div>
+                  <label
+                    htmlFor="mobile"
+                    className="mb-1 block text-sm font-medium text-ink"
+                  >
+                    WhatsApp number
+                  </label>
+                  <input
+                    id="mobile"
+                    name="mobile"
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel"
+                    required
+                    value={form.mobile}
+                    onChange={handleChange}
+                    className="w-full rounded-lg border border-bronze/20 px-4 py-3 text-ink outline-none transition focus:border-primaryBrown focus:ring-2 focus:ring-primaryBrown/20"
+                    placeholder="10-digit mobile number"
+                  />
+                  <p className="mt-1 text-xs text-textMuted">
+                    We'll send your matched photos to this number on WhatsApp.
+                  </p>
+                </div>
+              )}
+
               {/* PHOTO UPLOAD */}
               <div>
-                <span className="mb-1 block text-sm font-medium text-gray-700">
+                <span className="mb-1 block text-sm font-medium text-ink">
                   Upload selfie or photo
                 </span>
                 <label
                   htmlFor="photo"
-                  className="flex cursor-pointer items-center gap-4 rounded-lg border-2 border-dashed border-gray-300 p-4 transition hover:border-primaryBrown"
+                  className="flex cursor-pointer items-center gap-4 rounded-lg border-2 border-dashed border-bronze/30 p-4 transition hover:border-primaryBrown"
                 >
                   {preview ? (
                     <img
@@ -306,7 +390,7 @@ export default function SmrutiForm() {
                       <FaCloudUploadAlt />
                     </span>
                   )}
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-textMuted">
                     {photo ? (
                       <>
                         <span className="font-medium text-primaryBrown">
@@ -338,7 +422,7 @@ export default function SmrutiForm() {
               </div>
 
               {/* CONSENT */}
-              <label className="flex items-start gap-3 text-sm text-gray-600">
+              <label className="flex items-start gap-3 text-sm text-textSoft">
                 <input
                   type="checkbox"
                   checked={consent}

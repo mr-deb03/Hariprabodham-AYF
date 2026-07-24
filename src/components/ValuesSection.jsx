@@ -53,8 +53,12 @@ function PillarCard({ pillar, className = "" }) {
         />
       </div>
       <div>
-        <h3 className="text-xl font-semibold text-gray-800">{pillar.title}</h3>
-        <p className="text-gray-500 mt-2">{pillar.description}</p>
+        {/* palette tokens, not raw Tailwind grays — keeps every surface on the
+            same colour system and guarantees the audited contrast ratios */}
+        <h3 className="font-display text-xl font-semibold text-maroon">
+          {pillar.title}
+        </h3>
+        <p className="mt-2 text-textSoft">{pillar.description}</p>
       </div>
     </div>
   );
@@ -64,9 +68,15 @@ const FourPillars = () => {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center bg-softGray overflow-hidden py-20 px-6">
 
-      {/* Decorative Background Blobs */}
-      <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-[#e6d6c2] rounded-full opacity-60 pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-[700px] h-[500px] bg-[#e2c9a6] rounded-full opacity-60 pointer-events-none" />
+      {/* Decorative Background Blobs — palette tones rather than one-off hexes */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-40 -top-40 h-[600px] w-[600px] rounded-full bg-sand opacity-60"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-40 -right-40 h-[500px] w-[700px] rounded-full bg-bronze/20 opacity-70"
+      />
 
       {/* Heading */}
       <Reveal className="text-center mb-12 relative z-10">

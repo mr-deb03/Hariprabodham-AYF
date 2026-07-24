@@ -104,7 +104,7 @@ function Portrait({ guru, big = false }) {
     );
   }
   return (
-    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#a86a4d] to-primaryBrown font-serif text-white">
+    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-bronze to-primaryBrown font-display text-white">
       <span className={big ? "text-6xl md:text-7xl" : "text-lg"}>
         {guru.initials}
       </span>
@@ -126,7 +126,7 @@ export default function ParamparaLineage() {
 
       <div className="relative mx-auto max-w-6xl">
         <Reveal className="mx-auto mb-12 max-w-3xl text-center">
-          <p className="text-lg leading-relaxed text-gray-600">
+          <p className="text-lg leading-relaxed text-textSoft">
             Bhagwan Swaminarayan manifested over two hundred years ago to
             establish a community dedicated to spiritual growth, selfless
             service, and interfaith harmony. That divine light continues today
@@ -147,7 +147,7 @@ export default function ParamparaLineage() {
               }`}
             >
               <span
-                className={`block h-20 w-20 overflow-hidden rounded-full bg-gradient-to-br from-softGray to-[#efe9e2] ring-offset-2 ring-offset-softGray transition-all duration-300 ${
+                className={`block h-20 w-20 overflow-hidden rounded-full bg-gradient-to-br from-softGray to-cream ring-offset-2 ring-offset-softGray transition-all duration-300 ${
                   i === active
                     ? "scale-110 ring-2 ring-primaryBrown"
                     : "ring-1 ring-primaryBrown/20"
@@ -159,7 +159,7 @@ export default function ParamparaLineage() {
                 className={`w-24 text-center text-xs leading-tight ${
                   i === active
                     ? "font-semibold text-primaryBrown"
-                    : "text-gray-500"
+                    : "text-textMuted"
                 }`}
               >
                 {g.short}
@@ -173,7 +173,7 @@ export default function ParamparaLineage() {
           key={active}
           className="animate-panel grid grid-cols-1 items-center gap-10 rounded-3xl bg-white p-8 shadow-lg md:grid-cols-2 md:p-12"
         >
-          <Tilt className="mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-2xl bg-gradient-to-br from-softGray to-[#efe9e2] shadow-xl">
+          <Tilt className="mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-2xl bg-gradient-to-br from-softGray to-cream shadow-xl">
             <Portrait guru={guru} big />
           </Tilt>
 
@@ -187,7 +187,7 @@ export default function ParamparaLineage() {
             <p className="mt-2 text-sm text-mutedBlue">
               Born {guru.birthName} &middot; {guru.birthplace}
             </p>
-            <p className="mt-5 leading-relaxed text-gray-600">{guru.bio}</p>
+            <p className="mt-5 leading-relaxed text-textSoft">{guru.bio}</p>
 
             {/* Prev / Next */}
             <div className="mt-8 flex items-center gap-4">
@@ -195,18 +195,18 @@ export default function ParamparaLineage() {
                 type="button"
                 onClick={() => go(-1)}
                 aria-label="Previous guru"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-primaryBrown text-primaryBrown transition-colors duration-300 hover:bg-primaryBrown hover:text-white"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-primaryBrown text-primaryBrown transition-colors duration-300 hover:bg-primaryBrown hover:text-white"
               >
                 ←
               </button>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-textMuted">
                 {active + 1} / {lineage.length}
               </span>
               <button
                 type="button"
                 onClick={() => go(1)}
                 aria-label="Next guru"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-primaryBrown text-primaryBrown transition-colors duration-300 hover:bg-primaryBrown hover:text-white"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-primaryBrown text-primaryBrown transition-colors duration-300 hover:bg-primaryBrown hover:text-white"
               >
                 →
               </button>

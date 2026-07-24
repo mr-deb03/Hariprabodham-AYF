@@ -53,7 +53,7 @@ const Activities = () => {
       <div className="mx-auto max-w-7xl">
         <Reveal className="mb-16 text-center">
           <p className="eyebrow mb-4">What We Do</p>
-          <h2 className="text-3xl font-medium text-primaryBrown md:text-4xl">
+          <h2 className="font-display text-3xl font-semibold text-maroon md:text-4xl lg:text-5xl">
             Our Activities
           </h2>
         </Reveal>
@@ -75,14 +75,14 @@ const Activities = () => {
                 delay={(index % 4) * 100}
                 className={`group h-full ${centered}`}
               >
-                <Tilt className="h-full rounded-2xl border border-gray-100 bg-softGray p-8 shadow-sm transition-shadow duration-300 hover:shadow-xl">
+                <Tilt className="h-full rounded-2xl border border-bronze/15 bg-softGray p-8 shadow-sm transition-shadow duration-300 hover:shadow-xl">
                   <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-primaryBrown/10 text-2xl text-primaryBrown transition-colors duration-300 group-hover:bg-primaryBrown group-hover:text-white">
                     <Icon />
                   </div>
                   <h3 className="mb-3 text-lg font-semibold text-primaryBrown">
                     {item.title}
                   </h3>
-                  <p className="text-sm leading-relaxed text-gray-600">
+                  <p className="text-sm leading-relaxed text-textSoft">
                     {item.text}
                   </p>
                 </Tilt>

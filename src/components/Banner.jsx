@@ -15,16 +15,17 @@ const Banner = () => {
       </Parallax>
 
       {/* Overlay */}
-      <div className="absolute inset-0 bg-black/60" />
+      <div aria-hidden="true" className="absolute inset-0 bg-black/60" />
 
       <Reveal className="relative z-10 flex h-full flex-col items-center justify-center gap-6 px-8 text-center md:flex-row md:justify-between md:px-20 md:text-left">
 
-        {/* Title */}
+        {/* Title — palette gold rather than raw Tailwind yellows, and the
+            eyebrow at full strength (sand) instead of a faded off-brand tint */}
         <div>
-          <p className="mb-2 text-sm tracking-[0.3em] text-yellow-200/90 uppercase">
+          <p className="mb-2 text-sm font-semibold uppercase tracking-[0.3em] text-sand">
             Featured Event
           </p>
-          <h2 className="font-serif text-5xl font-semibold bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 bg-clip-text text-transparent drop-shadow-lg md:text-7xl">
+          <h2 className="bg-gradient-to-r from-gold via-sand to-gold bg-clip-text font-display text-5xl font-semibold text-transparent drop-shadow-lg md:text-7xl">
             Guru Purnima
             <span className="ml-3 text-3xl md:text-5xl">2026</span>
           </h2>

@@ -3,93 +3,87 @@ import img1 from "../assets/home/diff-1.webp";
 import img2 from "../assets/home/diff-2.webp";
 import img3 from "../assets/home/diff-3.webp";
 import Reveal from "./Reveal";
+import SectionHeading from "./SectionHeading";
 import Tilt from "./Tilt";
+
+/* The three rows were near-identical blocks of markup differing only in copy,
+   image and side. Driving them from data matches how the rest of the site does
+   it (pillars, stats, quotes) and keeps the alternating layout in one place. */
+const areas = [
+  {
+    title: "Youth & Women Empowerment",
+    body: "Supporting leadership, character-building, and self-confidence in young people and women.",
+    image: img1,
+    alt: "Youth and women in a leadership workshop",
+  },
+  {
+    title: "Community & Family Support",
+    body: "One-to-one guidance and community programs that strengthen families and foster unity.",
+    image: img2,
+    alt: "Volunteers serving the local community",
+  },
+  {
+    title: "Spiritual & Personal Development",
+    body: "Daily meditation, self-reflection, and weekly assemblies encourage inner peace and moral growth.",
+    image: img3,
+    alt: "Youth gathered for a weekly assembly",
+  },
+];
 
 export default function DifferenceSection() {
   return (
     <section className="w-full bg-white py-20 md:py-32">
-      <div className="max-w-7xl mx-auto px-6 md:px-12">
+      <div className="mx-auto max-w-7xl px-6 md:px-12">
+        {/* The eyebrow used to BE the <h2>, which left the section with no real
+            title and a heading that read as a caption. Now it's a label above a
+            proper heading, with the old intro copy demoted to the lede. */}
+        <SectionHeading
+          eyebrow="How We Make a Difference"
+          title="Harmony through acceptance and selflessness"
+          lede="His Divine Holiness Prabodh Swamiji Maharaj tirelessly endeavours to instil harmony within families, guiding them to live for one another."
+          className="mb-16 md:mb-28"
+        />
 
-        {/* SECTION HEADER */}
-        <Reveal className="text-center max-w-4xl mx-auto mb-16 md:mb-32">
-          <h2 className="eyebrow mb-8">HOW WE MAKE A DIFFERENCE</h2>
+        <div className="space-y-16 md:space-y-28">
+          {areas.map((area, i) => {
+            const imageFirst = i % 2 === 1; // alternate sides down the page
+            return (
+              <Reveal
+                key={area.title}
+                variant={imageFirst ? "right" : "left"}
+                className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-24"
+              >
+                <div className={imageFirst ? "lg:order-2" : "order-2 lg:order-none"}>
+                  <h3 className="mb-4 font-display text-2xl font-medium text-maroon">
+                    {area.title}
+                  </h3>
+                  <p className="max-w-md text-lg leading-relaxed text-textSoft">
+                    {area.body}
+                  </p>
+                </div>
 
-          <p className="text-lg md:text-xl leading-relaxed text-gray-600">
-            His Divine Holiness Prabodh Swamiji Maharaj tirelessly endeavours
-            to instil harmony within families, guiding them to{" "}
-            <span className="font-semibold text-maroon">
-              live in harmony through acceptance and selflessness.
-            </span>
-          </p>
-        </Reveal>
-
-        {/* ROW 1 — LEFT TEXT / RIGHT IMAGE */}
-        <Reveal variant="left" className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center mb-16 md:mb-32">
-          <div className="order-2 lg:order-none">
-            <h3 className="text-2xl font-medium text-primaryBrown mb-4">
-              Youth & Women Empowerment
-            </h3>
-            <p className="text-lg text-gray-500 leading-relaxed max-w-md">
-              Supporting leadership, character-building, and self-confidence
-              in young people and women.
-            </p>
-          </div>
-
-          <div className="order-1 lg:order-none flex justify-start lg:justify-end">
-            <ImageCard src={img1} alt="Youth & Women Empowerment" />
-          </div>
-        </Reveal>
-
-        {/* ROW 2 — LEFT IMAGE / RIGHT TEXT */}
-        <Reveal variant="right" className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center mb-16 md:mb-32">
-          <div className="flex justify-start lg:justify-start">
-            <ImageCard src={img2} alt="Community Service" />
-          </div>
-
-          <div>
-            <h3 className="text-2xl font-medium text-primaryBrown mb-4">
-              Community & Family Support
-            </h3>
-            <p className="text-lg text-gray-500 leading-relaxed max-w-md">
-              One-to-one guidance and community programs that strengthen
-              families and foster unity.
-            </p>
-          </div>
-        </Reveal>
-
-        {/* ROW 3 — LEFT TEXT / RIGHT IMAGE */}
-        <Reveal variant="left" className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
-          <div className="order-2 lg:order-none">
-            <h3 className="text-2xl font-medium text-primaryBrown mb-4">
-              Spiritual & Personal Development
-            </h3>
-            <p className="text-lg text-gray-500 leading-relaxed max-w-md">
-              Daily meditation, self-reflection, and weekly assemblies
-              encourage inner peace and moral growth.
-            </p>
-          </div>
-
-          <div className="order-1 lg:order-none flex justify-start lg:justify-end">
-            <ImageCard src={img3} alt="Spiritual Development" />
-          </div>
-        </Reveal>
-
+                <div
+                  className={`flex ${
+                    imageFirst
+                      ? "lg:order-1 lg:justify-start"
+                      : "order-1 lg:order-none lg:justify-end"
+                  }`}
+                >
+                  <Tilt className="w-full max-w-[400px] overflow-hidden rounded-2xl shadow-xl transition-shadow duration-300 hover:shadow-2xl">
+                    <img
+                      src={area.image}
+                      alt={area.alt}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover"
+                    />
+                  </Tilt>
+                </div>
+              </Reveal>
+            );
+          })}
+        </div>
       </div>
     </section>
-  );
-}
-
-/* Reusable image card */
-function ImageCard({ src, alt }) {
-  return (
-    <Tilt className="rounded-2xl overflow-hidden shadow-xl w-full max-w-[400px] transition-shadow duration-300 hover:shadow-2xl">
-      <img
-        src={src}
-        alt={alt}
-        loading="lazy"
-        decoding="async"
-        className="w-full h-full object-cover"
-      />
-    </Tilt>
   );
 }

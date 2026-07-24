@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import Reveal from "./Reveal";
+import SectionHeading from "./SectionHeading";
 import Tilt from "./Tilt";
 import events, { formatEventDate } from "../data/events";
 
@@ -12,15 +13,12 @@ export default function EventGalleries() {
   return (
     <section className="bg-white py-20 px-6 md:px-20">
       <div className="mx-auto max-w-6xl">
-        <Reveal
-          as="h2"
-          className="mb-3 text-center text-3xl font-medium text-primaryBrown md:text-4xl"
-        >
-          Event Galleries
-        </Reveal>
-        <Reveal className="mb-12 text-center text-mutedBlue">
-          Relive the moments — tap an event to see all its photos.
-        </Reveal>
+        <SectionHeading
+          eyebrow="Gallery"
+          title="Event Galleries"
+          lede="Relive the moments — tap an event to see all its photos."
+          className="mb-12"
+        />
 
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {events.map((ev, i) => (

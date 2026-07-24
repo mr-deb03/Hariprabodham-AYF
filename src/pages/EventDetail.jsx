@@ -94,14 +94,19 @@ export default function EventDetail() {
       {/* Lightbox */}
       {lightbox !== null && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${event.title} photo viewer`}
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
           onClick={close}
         >
+          {/* Controls need a 44x44 hit area — a bare glyph is only as clickable
+              as the character itself, which is well under the minimum. */}
           <button
             type="button"
             aria-label="Close"
             onClick={close}
-            className="absolute right-5 top-4 text-4xl leading-none text-white/80 transition hover:text-white"
+            className="absolute right-5 top-4 flex h-11 w-11 items-center justify-center text-4xl leading-none text-white/80 transition-colors duration-200 hover:text-white"
           >
             ×
           </button>
@@ -114,7 +119,7 @@ export default function EventDetail() {
                 e.stopPropagation();
                 step(-1);
               }}
-              className="absolute left-3 text-4xl text-white/70 transition hover:text-white md:left-8"
+              className="absolute left-3 flex h-11 w-11 items-center justify-center text-4xl text-white/70 transition-colors duration-200 hover:text-white md:left-8"
             >
               ‹
             </button>
@@ -135,7 +140,7 @@ export default function EventDetail() {
                 e.stopPropagation();
                 step(1);
               }}
-              className="absolute right-3 text-4xl text-white/70 transition hover:text-white md:right-8"
+              className="absolute right-3 flex h-11 w-11 items-center justify-center text-4xl text-white/70 transition-colors duration-200 hover:text-white md:right-8"
             >
               ›
             </button>

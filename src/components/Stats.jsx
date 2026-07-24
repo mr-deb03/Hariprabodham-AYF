@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import Reveal from "./Reveal";
+import SectionHeading from "./SectionHeading";
 
 /*
  * TODO: replace these figures with the foundation's real numbers.
@@ -62,28 +63,33 @@ function Counter({ value, suffix = "", duration = 2000 }) {
 
 const Stats = () => {
   return (
-    <section className="relative py-24 px-6 md:px-20 bg-gradient-to-br from-logoCrimson via-logoMagenta to-logoBlue text-white text-center overflow-hidden">
-      <Reveal>
-        <p className="tracking-[0.3em] text-xs uppercase opacity-80">
-          Our Reach
-        </p>
-        <h2 className="mt-3 mb-16 font-display text-4xl font-semibold text-onDark md:text-5xl">
-          Seva in Numbers
-        </h2>
-      </Reveal>
+    <section className="panel-gradient on-dark section relative overflow-hidden text-center text-white">
+      <SectionHeading
+        eyebrow="Our Reach"
+        title="Seva in Numbers"
+        tone="dark"
+        className="mb-16"
+      />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-12 max-w-5xl mx-auto">
+      <dl className="mx-auto grid max-w-5xl grid-cols-2 gap-12 md:grid-cols-4">
         {stats.map((stat, index) => (
           <Reveal key={stat.label} delay={index * 100}>
-            <div className="text-4xl md:text-5xl font-semibold">
-              <Counter value={stat.value} suffix={stat.suffix} />
+            {/* dd before dt: the number is the visual anchor, but the label is
+                what names it — so the pair is ordered for sight and reversed
+                with flex-col-reverse for the accessibility tree. */}
+            <div className="flex flex-col">
+              <dd className="text-4xl font-semibold md:text-5xl">
+                <Counter value={stat.value} suffix={stat.suffix} />
+              </dd>
+              {/* was opacity-80, which dropped these labels below AA on the
+                  gradient's crimson end even with the scrim */}
+              <dt className="mt-2 text-sm tracking-wide text-white md:text-base">
+                {stat.label}
+              </dt>
             </div>
-            <p className="mt-2 text-sm md:text-base opacity-80 tracking-wide">
-              {stat.label}
-            </p>
           </Reveal>
         ))}
-      </div>
+      </dl>
     </section>
   );
 };
