@@ -63,7 +63,8 @@ const lineage = [
     birthName: "Prabhudasbhai",
     birthplace: "Asoj, Gujarat",
     image: hariprasadImg,
-    thumbX: "8%",
+    // Head sits a touch left of frame centre; 8% over-corrected it.
+    thumbX: "3%",
     bio: "The fifth successor, who founded the Yogi Divine Society and championed Atmiyata — spiritual affinity. Renowned as one of the most secular saints of the modern age, he inspired thousands of devoted youths.",
   },
   {
@@ -74,6 +75,10 @@ const lineage = [
     birthName: "Narotambhai Patel",
     birthplace: "Vanthali, Saurashtra",
     image: prabodhImg,
+    // Widest empty margins of the six, so it needs the most zoom to bring the
+    // head up to the same size as the others.
+    thumbScale: 2.1,
+    thumbX: "2%",
     bio: "The sixth successor and current spiritual guru. Ordained at the age of 18, he has authored nine books, composed 'Kariye Smruti Na Gaan', and emphasises empowering youth toward spiritually balanced, addiction-free lives.",
   },
 ];
@@ -91,15 +96,20 @@ function Portrait({ guru, big = false }) {
       );
     }
     // Thumbnail: zoom + per-guru nudge so each face is framed nicely.
+    // The source portraits aren't shot to a common crop — some sit tight to the
+    // subject, others carry wide empty margins — so a single shared zoom leaves
+    // some heads noticeably smaller than the rest. thumbScale lets those images
+    // zoom further rather than only shifting position.
     const tx = guru.thumbX || "0%";
     const ty = guru.thumbY || "0%";
+    const scale = guru.thumbScale || 1.6;
     return (
       <img
         src={guru.image}
         alt={guru.name}
         loading="lazy"
         className="h-full w-full origin-top object-cover object-top"
-        style={{ transform: `scale(1.6) translate(${tx}, ${ty})` }}
+        style={{ transform: `scale(${scale}) translate(${tx}, ${ty})` }}
       />
     );
   }
