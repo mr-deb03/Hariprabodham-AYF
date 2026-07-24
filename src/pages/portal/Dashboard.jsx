@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../portal/AuthContext";
 import { mandalLabel } from "../../portal/constants";
 import { Badge } from "../../portal/ui";
+import BirthdaySection from "./BirthdaySection";
 
 // Literal class strings — Tailwind can't see dynamically built class names.
 const ACCENTS = {
@@ -95,6 +96,8 @@ export default function Dashboard() {
           desc="Private videos for registered karyakartas."
         />
       </div>
+
+      <BirthdaySection />
     </div>
   );
 }

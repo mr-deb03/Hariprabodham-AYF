@@ -49,15 +49,85 @@ const INSTAGRAM_POST_URLS = [
 const YOUTUBE_CHANNEL = "https://www.youtube.com/@hariprabodhamayf";
 const INSTAGRAM_PROFILE = "https://www.instagram.com/hariprabodhamayf";
 
+// YouTube's own still. hqdefault exists for every video; maxres often doesn't.
+const thumbFor = (v) => v.thumbnail || `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`;
+
+/*
+ * Click-to-load video card.
+ *
+ * Embedding a dozen <iframe>s meant a dozen full YouTube documents — well over
+ * a megabyte of script each — downloaded before the visitor had asked to watch
+ * anything. This renders the poster frame instead and only mounts the iframe on
+ * click, so the page costs a handful of images until someone presses play.
+ */
+function VideoCard({ video, featured = false }) {
+  const [playing, setPlaying] = useState(false);
+  const title = video.title || "HariPrabodham AYF video";
+
+  return (
+    <div
+      className={`overflow-hidden rounded-2xl bg-white shadow-lg transition-shadow duration-300 hover:shadow-2xl ${
+        featured ? "shadow-card" : ""
+      }`}
+    >
+      <div className="relative aspect-video overflow-hidden bg-ink/5">
+        {playing ? (
+          <iframe
+            className="h-full w-full"
+            src={`https://www.youtube.com/embed/${video.id}?autoplay=1`}
+            title={title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setPlaying(true)}
+            aria-label={`Play video: ${title}`}
+            className="group/play absolute inset-0 h-full w-full cursor-pointer"
+          >
+            <img
+              src={thumbFor(video)}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover/play:scale-105"
+            />
+            <span aria-hidden="true" className="absolute inset-0 bg-ink/20" />
+            <span
+              aria-hidden="true"
+              className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 shadow-lg transition-transform duration-300 group-hover/play:scale-110"
+            >
+              <FaYoutube className="text-3xl text-red-600" />
+            </span>
+          </button>
+        )}
+      </div>
+
+      {/* The title was previously invisible — it lived only in the iframe's
+          title attribute, so sighted visitors saw an unlabelled thumbnail. */}
+      <div className={featured ? "p-6 md:p-8" : "p-5"}>
+        <h3
+          className={`font-display font-semibold text-maroon ${
+            featured ? "text-2xl md:text-3xl" : "text-lg"
+          }`}
+        >
+          {title}
+        </h3>
+      </div>
+    </div>
+  );
+}
+
 function FollowCard({ href, icon: Icon, label, color }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center justify-center gap-3 rounded-2xl bg-white p-8 text-lg font-medium text-primaryBrown shadow-lg transition hover:shadow-2xl"
+      className="flex min-h-[44px] items-center justify-center gap-3 rounded-2xl bg-white p-8 text-lg font-medium text-primaryBrown shadow-lg transition-shadow duration-300 hover:shadow-2xl"
     >
-      <Icon className={`text-3xl ${color}`} />
+      <Icon aria-hidden="true" className={`text-3xl ${color}`} />
       {label}
     </a>
   );
@@ -140,7 +210,7 @@ export default function MediaGallery() {
   }, [igKey]);
 
   return (
-    <section className="bg-white py-20 px-6 md:px-20">
+    <section className="bg-white section">
       <div className="mx-auto max-w-6xl">
         {/* YouTube */}
         <SectionHeading
@@ -151,22 +221,24 @@ export default function MediaGallery() {
         />
 
         {hasYouTube ? (
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-            {ytList.map((v, index) => (
-              <Reveal key={v.id} variant="flip" delay={index * 100}>
-                <div className="aspect-video overflow-hidden rounded-2xl shadow-lg">
-                  <iframe
-                    className="h-full w-full"
-                    src={`https://www.youtube.com/embed/${v.id}`}
-                    title={v.title || `HariPrabodham AYF video ${index + 1}`}
-                    loading="lazy"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  />
-                </div>
-              </Reveal>
-            ))}
-          </div>
+          <>
+            {/* Latest upload leads; the rest follow three-up. A flat grid of
+                identical tiles gave the newest video no more prominence than
+                one from three years ago. */}
+            <Reveal className="mb-10">
+              <VideoCard video={ytList[0]} featured />
+            </Reveal>
+
+            {ytList.length > 1 && (
+              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                {ytList.slice(1).map((v, index) => (
+                  <Reveal key={v.id} variant="flip" delay={index * 100}>
+                    <VideoCard video={v} />
+                  </Reveal>
+                ))}
+              </div>
+            )}
+          </>
         ) : (
           <Reveal>
             <FollowCard
