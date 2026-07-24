@@ -158,13 +158,8 @@ export default function ParamparaLineage() {
           className="mb-14"
         />
 
-        {/* PORTRAIT TABS — a connecting rule behind the portraits reads the row
-            as a succession rather than a plain strip of buttons. */}
-        <div className="relative mb-12">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute left-0 right-0 top-[3.25rem] hidden h-px bg-gradient-to-r from-transparent via-bronze/30 to-transparent md:block"
-          />
+        {/* PORTRAIT TABS */}
+        <div className="mb-12">
           <div
             role="tablist"
             aria-label="Gunatit gurus"
