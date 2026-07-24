@@ -178,7 +178,7 @@ export default function SmrutiForm() {
   };
 
   return (
-    <section className="bg-softGray py-24 px-6 md:px-12">
+    <section className="bg-softGray section">
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
         {/* LEFT — how it works */}
         <Reveal variant="left">
@@ -191,24 +191,36 @@ export default function SmrutiForm() {
             for pictures of you — then deliver them to you on Telegram.
           </p>
 
-          <div className="space-y-7">
-            {steps.map((step) => {
+          {/* An <ol>, not a stack of divs — this is a sequence, and the rule
+              running between the markers makes that legible at a glance. */}
+          <ol className="relative space-y-7">
+            {steps.map((step, i) => {
               const Icon = step.icon;
+              const last = i === steps.length - 1;
               return (
-                <div key={step.title} className="flex gap-5">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primaryBrown/10 text-xl text-primaryBrown">
+                <li key={step.title} className="relative flex gap-5">
+                  {!last && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute left-6 top-12 h-[calc(100%+0.5rem)] w-px bg-bronze/25"
+                    />
+                  )}
+                  <span
+                    aria-hidden="true"
+                    className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primaryBrown/10 text-xl text-primaryBrown ring-4 ring-softGray"
+                  >
                     <Icon />
-                  </div>
+                  </span>
                   <div>
-                    <h3 className="font-semibold text-primaryBrown">
-                      {step.title}
+                    <h3 className="font-display text-lg font-semibold text-maroon">
+                      <span className="text-bronze">{i + 1}.</span> {step.title}
                     </h3>
-                    <p className="text-mutedBlue">{step.text}</p>
+                    <p className="text-textSoft">{step.text}</p>
                   </div>
-                </div>
+                </li>
               );
             })}
-          </div>
+          </ol>
 
           <p className="mt-10 rounded-xl bg-white/70 p-4 text-sm leading-relaxed text-textMuted">
             <FaIdBadge className="mr-2 inline text-primaryBrown" />
