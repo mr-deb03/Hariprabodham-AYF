@@ -6,6 +6,7 @@ Run locally:  uvicorn app:app --reload --port 8000
 import os
 import shutil
 import tempfile
+import threading
 
 import cv2
 from fastapi import (
@@ -44,10 +45,49 @@ app.mount("/media", StaticFiles(directory=settings.album_cache_dir), name="media
 
 SEND_DIR = "_send"  # resized, WhatsApp-friendly copies live under album_cache/_send
 
+# ---- Warm-up ------------------------------------------------------------
+# Matching is lazy: the model loads on first use and the album index is built
+# on first use, and neither survives a container restart on a free Space. That
+# put the whole cost on the first visitor, whose caller (the Worker's
+# waitUntil) gives up long before it finishes — so their photos were silently
+# dropped and only the *next* request saw a warm Space. Do the work at boot,
+# and let the cron re-run it to pick up newly added album photos.
+_warm_lock = threading.Lock()
+_warm_state = {"status": "cold", "photos": 0, "error": None}
+
+
+def _warm_cache():
+    if not _warm_lock.acquire(blocking=False):
+        return  # a warm-up is already in flight; don't stack another
+    try:
+        _warm_state["status"] = "warming"
+        drive.sync_album(settings.album_cache_dir)
+        count = matcher.warm(settings.album_cache_dir)
+        _warm_state.update(status="warm", photos=count, error=None)
+        print(f"[smruti][warm] ready — {count} album photo(s) indexed")
+    except Exception as exc:  # noqa: BLE001
+        _warm_state.update(status="error", error=str(exc))
+        print("[smruti][warm] failed:", exc)
+    finally:
+        _warm_lock.release()
+
+
+def _warm_in_background():
+    threading.Thread(target=_warm_cache, name="smruti-warm", daemon=True).start()
+
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "warm": _warm_state["status"]}
+
+
+@app.get("/warm")
+def warm():
+    """Cron target. Kicks off the warm-up and returns straight away — the build
+    can outlast any client timeout, so never make the caller wait for it."""
+    if _warm_state["status"] != "warming":
+        _warm_in_background()
+    return {"ok": True, **_warm_state}
 
 
 @app.get("/debug/net")
@@ -386,6 +426,14 @@ async def telegram_webhook(
 
     background.add_task(tg.send_message, chat_id, USE_WEBSITE.format(name=first_name))
     return {"ok": True}
+
+
+@app.on_event("startup")
+def _warm_on_boot():
+    """Restarts — not idle time — are what leave the Space cold, so warm on every
+    boot. Backgrounded: the port has to start listening right away or the Space
+    is marked unhealthy."""
+    _warm_in_background()
 
 
 @app.on_event("startup")

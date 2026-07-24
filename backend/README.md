@@ -145,10 +145,14 @@ itself via the Space's public `/media` URLs. The Worker source is
    curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://<worker-url>/&secret_token=<WEBHOOK_SECRET>"
    ```
 4. Add a **Cron Trigger** to the Worker (e.g. `*/30 * * * *`) — its `scheduled`
-   handler pings the Space's `/health` to keep the free Space warm. Without it,
-   the first request after the Space sleeps hits a ~30 s cold start (models
-   reload) that can exceed the Worker's execution budget, so the greeting sends
-   but the photos don't. Keeping it warm makes matching ~2–3 s and reliable.
+   handler pings the Space's `/warm`, which loads the face model and refreshes
+   the album index. It must be `/warm` and not `/health`: `/health` answers
+   without touching either, so it keeps the Space *awake* but still *cold*.
+   A cold first request (model load + full album embed) can exceed the Worker's
+   execution budget, so the greeting sends but the photos don't — then the next
+   request is fast because the first one warmed everything on its way out.
+   The Space also warms itself on boot, which is what actually covers restarts;
+   the cron additionally picks up newly added album photos ahead of time.
 
 The Space's own `/telegram/webhook` (from 2b) is left in place but unused when
 the webhook points at the Worker.
@@ -193,7 +197,9 @@ folder.
    https://your-name-smruti-api.hf.space
    ```
    Health check: open `https://your-name-smruti-api.hf.space/health` →
-   `{"status":"ok"}`.
+   `{"status":"ok","warm":"warm"}`. The `warm` field reports the match path:
+   `cold` → `warming` → `warm` (or `error`). It goes `warming` on its own within
+   a second of boot; wait for `warm` before expecting a fast first match.
 
 `PUBLIC_BASE_URL` is auto-detected from the Space (`SPACE_HOST`), so Twilio can
 fetch the photos with no extra config.

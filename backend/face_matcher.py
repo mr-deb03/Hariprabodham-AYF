@@ -10,6 +10,7 @@ keeping the same find_matches() signature.
 """
 import os
 import pickle
+import threading
 
 import cv2
 import numpy as np
@@ -19,6 +20,7 @@ from config import settings
 _IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".webp", ".bmp")
 _INDEX_FILE = "face_index.pkl"
 _app = None
+_app_lock = threading.Lock()
 
 
 def _is_image(name: str) -> bool:
@@ -29,13 +31,27 @@ def _get_app():
     """Lazy-load the InsightFace model once (heavy import + model load)."""
     global _app
     if _app is None:
-        from insightface.app import FaceAnalysis
+        # The warm-up thread and a live request can land here together; without
+        # the lock both would load the model on an already-busy CPU box.
+        with _app_lock:
+            if _app is None:
+                from insightface.app import FaceAnalysis
 
-        _app = FaceAnalysis(
-            name=settings.face_model_pack, providers=["CPUExecutionProvider"]
-        )
-        _app.prepare(ctx_id=-1, det_size=(640, 640))
+                app = FaceAnalysis(
+                    name=settings.face_model_pack, providers=["CPUExecutionProvider"]
+                )
+                app.prepare(ctx_id=-1, det_size=(640, 640))
+                _app = app  # publish only once it's ready to use
     return _app
+
+
+def warm(album_dir: str) -> int:
+    """Load the model and bring the album index up to date ahead of any request.
+    Returns the number of indexed album photos."""
+    _get_app()
+    if not os.path.isdir(album_dir):
+        return 0
+    return len(_refresh_index(album_dir))
 
 
 def _embeddings_for(path: str):
