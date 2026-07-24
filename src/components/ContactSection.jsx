@@ -1,8 +1,19 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { FaInstagram, FaYoutube, FaMapMarkerAlt, FaUserPlus } from "react-icons/fa";
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaYoutube,
+  FaMapMarkerAlt,
+  FaUserPlus,
+} from "react-icons/fa";
 import Reveal from "./Reveal";
-import { CENTERS, INSTAGRAM_PROFILE, YOUTUBE_CHANNEL } from "../lib/centers";
+import {
+  CENTERS,
+  FACEBOOK_PAGE,
+  INSTAGRAM_PROFILE,
+  YOUTUBE_CHANNEL,
+} from "../lib/centers";
 
 // Kept out of the rendered page deliberately — the address is no longer shown
 // anywhere on the site, but the form still needs somewhere to deliver to.
@@ -29,12 +40,15 @@ const ContactSection = () => {
   const inputClass =
     "w-full rounded-lg border border-bronze/20 px-4 py-3 text-ink outline-none transition-colors duration-200 focus:border-primaryBrown focus:ring-2 focus:ring-primaryBrown/20";
 
+  // Trimmed top padding and heading margin: with the 42vh page header above,
+  // py-24 + mb-16 pushed the form entirely below the fold, so the page read as
+  // if it ended at "Get in Touch". Now the form's top edge peeks in.
   return (
-    <section id="contact" className="bg-softGray py-24 px-6 md:px-12">
+    <section id="contact" className="bg-softGray px-6 py-16 md:px-12">
       <div className="mx-auto max-w-6xl">
-        <Reveal className="mb-16 text-center">
+        <Reveal className="mb-10 text-center">
           <p className="eyebrow mb-4">Contact</p>
-          <h2 className="text-3xl font-medium text-primaryBrown md:text-4xl">
+          <h2 className="font-display text-3xl font-semibold text-maroon md:text-4xl lg:text-5xl">
             Get in Touch
           </h2>
         </Reveal>
@@ -139,24 +153,22 @@ const ContactSection = () => {
                 Reels, updates and glimpses of youth life at HariPrabodham.
               </p>
               <div className="flex flex-wrap gap-3">
-                <a
-                  href={INSTAGRAM_PROFILE}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-[44px] items-center gap-3 rounded-xl border border-bronze/20 px-5 py-3 font-medium text-primaryBrown transition-colors duration-200 hover:border-gold hover:bg-gold/10"
-                >
-                  <FaInstagram aria-hidden="true" className="text-xl text-pink-600" />
-                  Instagram
-                </a>
-                <a
-                  href={YOUTUBE_CHANNEL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-[44px] items-center gap-3 rounded-xl border border-bronze/20 px-5 py-3 font-medium text-primaryBrown transition-colors duration-200 hover:border-gold hover:bg-gold/10"
-                >
-                  <FaYoutube aria-hidden="true" className="text-xl text-red-600" />
-                  YouTube
-                </a>
+                {[
+                  { label: "Instagram", href: INSTAGRAM_PROFILE, icon: FaInstagram, tint: "text-pink-600" },
+                  { label: "YouTube", href: YOUTUBE_CHANNEL, icon: FaYoutube, tint: "text-red-600" },
+                  { label: "Facebook", href: FACEBOOK_PAGE, icon: FaFacebookF, tint: "text-blue-600" },
+                ].map(({ label, href, icon: Icon, tint }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-[44px] items-center gap-3 rounded-xl border border-bronze/20 px-5 py-3 font-medium text-primaryBrown transition-colors duration-200 hover:border-gold hover:bg-gold/10"
+                  >
+                    <Icon aria-hidden="true" className={`text-xl ${tint}`} />
+                    {label}
+                  </a>
+                ))}
               </div>
             </div>
 

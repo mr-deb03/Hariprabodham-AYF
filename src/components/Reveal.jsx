@@ -69,8 +69,11 @@ export default function Reveal({
       },
       {
         threshold: amount,
-        // Start a touch before the element is fully in view for smoother timing.
-        rootMargin: "0px 0px -8% 0px",
+        // Positive bottom margin extends the observer's root BELOW the viewport,
+        // so content reveals just before it scrolls into view. A negative value
+        // here (as this had) shrinks the root instead and delays the reveal,
+        // which leaves visible-but-blank space at the fold.
+        rootMargin: "0px 0px 12% 0px",
       }
     );
 
