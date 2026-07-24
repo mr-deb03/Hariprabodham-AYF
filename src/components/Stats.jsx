@@ -2,15 +2,12 @@ import React, { useEffect, useRef, useState } from "react";
 import Reveal from "./Reveal";
 import SectionHeading from "./SectionHeading";
 
-/*
- * TODO: replace these figures with the foundation's real numbers.
- * Inspired by the "Divine Works" stat grid on the HariPrabodham family sites.
- */
+/* Figures supplied by the foundation. */
 const stats = [
-  { value: 50, suffix: "+", label: "Years of Seva" },
-  { value: 500, suffix: "+", label: "Youth Members" },
-  { value: 30, suffix: "+", label: "Events Each Year" },
-  { value: 1000, suffix: "+", label: "Lives Touched" },
+  { value: 30, suffix: "+", label: "Years of Seva" },
+  { value: 1000, suffix: "+", label: "Youth Members" },
+  { value: 15, suffix: "+", label: "Events Each Year" },
+  { value: 5000, suffix: "+", label: "Lives Touched" },
 ];
 
 /* Counts up from 0 to `value` the first time it scrolls into view. */
