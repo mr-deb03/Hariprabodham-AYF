@@ -13,3 +13,4 @@ export const CENTERS = [
 
 export const INSTAGRAM_PROFILE = "https://www.instagram.com/hariprabodhamayf";
 export const YOUTUBE_CHANNEL = "https://www.youtube.com/@hariprabodhamayf";
+export const FACEBOOK_PAGE = "https://www.facebook.com/share/1D2eY6NNpM/";

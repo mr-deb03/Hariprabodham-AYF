@@ -1,8 +1,20 @@
 import React from "react";
-import { FaInstagram, FaYoutube } from "react-icons/fa";
+import { FaFacebookF, FaInstagram, FaYoutube } from "react-icons/fa";
 import logo from "../assets/common/HPAYF logo.webp";
 import Reveal from "./Reveal";
-import { CENTERS as centers } from "../lib/centers";
+import {
+  CENTERS as centers,
+  FACEBOOK_PAGE,
+  INSTAGRAM_PROFILE,
+  YOUTUBE_CHANNEL,
+} from "../lib/centers";
+
+// URLs come from lib/centers so the footer and the contact page can't drift.
+const socials = [
+  { label: "Instagram", href: INSTAGRAM_PROFILE, icon: FaInstagram },
+  { label: "YouTube", href: YOUTUBE_CHANNEL, icon: FaYoutube },
+  { label: "Facebook", href: FACEBOOK_PAGE, icon: FaFacebookF },
+];
 
 const Footer = () => {
   return (
@@ -39,13 +51,21 @@ const Footer = () => {
               Find us on Social Media:
             </h4>
 
-            <div className="flex gap-5 text-xl text-primaryBrown">
-              <a href="https://www.instagram.com/hariprabodhamayf" aria-label="Instagram" target="_blank" rel="noopener noreferrer" className="hover:text-black">
-                <FaInstagram />
-              </a>
-              <a href="https://www.youtube.com/@hariprabodhamayf" aria-label="YouTube" target="_blank" rel="noopener noreferrer" className="hover:text-black">
-                <FaYoutube />
-              </a>
+            {/* Bare icons gave these a tap area barely bigger than the glyph;
+                the 44x44 box is the minimum comfortable target on touch. */}
+            <div className="flex gap-2 text-xl text-primaryBrown">
+              {socials.map(({ label, href, icon: Icon }) => (
+                <a
+                  key={label}
+                  href={href}
+                  aria-label={label}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-11 w-11 items-center justify-center rounded-full transition-colors duration-200 hover:bg-primaryBrown/10 hover:text-maroonDark"
+                >
+                  <Icon aria-hidden="true" />
+                </a>
+              ))}
             </div>
           </div>
         </div>
