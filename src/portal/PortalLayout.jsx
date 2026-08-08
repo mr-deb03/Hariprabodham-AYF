@@ -77,10 +77,14 @@ function AccountMenu() {
         </svg>
       </button>
 
+      {/* Anchored left below sm: once the nav tabs wrap, the avatar sits at the
+          START of a fresh row, so a right-anchored 240px menu runs off the left
+          edge of the screen and clips the email. From sm up the avatar is back
+          on the right, where right-anchoring is correct. */}
       {open && (
         <div
           role="menu"
-          className="absolute right-0 z-40 mt-2 w-60 overflow-hidden rounded-xl border border-sand bg-white shadow-card"
+          className="absolute left-0 z-40 mt-2 w-60 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-sand bg-white shadow-card sm:left-auto sm:right-0"
         >
           <div className="flex items-center gap-3 border-b border-sand/70 px-4 py-3">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-maroon text-sm font-semibold text-onDark">

@@ -490,7 +490,7 @@ export default function AdminMembers() {
               <input required className={inputClass} value={form.name} onChange={set("name")} />
             </Field>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field label="Contact number">
                 <input
                   type="tel"

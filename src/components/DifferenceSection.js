@@ -53,7 +53,13 @@ export default function DifferenceSection() {
                 variant={imageFirst ? "right" : "left"}
                 className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-24"
               >
-                <div className={imageFirst ? "lg:order-2" : "order-2 lg:order-none"}>
+                {/* No base order on either child: on a phone every row reads
+                    heading → copy → image, straight from DOM order. The
+                    alternating sides are a two-column idea, so they only kick
+                    in at lg. Previously the base order-1/order-2 flipped the
+                    odd rows on mobile too, which stacked one row's heading
+                    directly under the previous row's, with no image between. */}
+                <div className={imageFirst ? "lg:order-2" : "lg:order-none"}>
                   <h3 className="mb-4 font-display text-2xl font-medium text-maroon">
                     {area.title}
                   </h3>
@@ -66,7 +72,7 @@ export default function DifferenceSection() {
                   className={`flex ${
                     imageFirst
                       ? "lg:order-1 lg:justify-start"
-                      : "order-1 lg:order-none lg:justify-end"
+                      : "lg:order-none lg:justify-end"
                   }`}
                 >
                   <Tilt className="w-full max-w-[400px] overflow-hidden rounded-2xl shadow-xl transition-shadow duration-300 hover:shadow-2xl">

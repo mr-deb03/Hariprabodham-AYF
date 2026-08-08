@@ -10,6 +10,11 @@ import banner6 from "../assets/home/banner6.webp";
 const slides = [banner1, banner2, banner3, banner4, banner5, banner6];
 const SLIDE_INTERVAL = 5000; // ms
 
+// The banners are shot to 16:9 and must never be cropped — the frame follows
+// the image, not the viewport. On a portrait phone that means a short hero;
+// that is the accepted trade for showing every slide whole.
+const HERO_FRAME = "relative aspect-[16/9] w-full overflow-hidden";
+
 export default function HeroBanner() {
   const [index, setIndex] = useState(0);
   // Defer downloading the other slides until after first paint so the first
@@ -40,7 +45,7 @@ export default function HeroBanner() {
       id="home"
       aria-roledescription="carousel"
       aria-label="HariPrabodham highlights"
-      className="relative aspect-[16/9] w-full overflow-hidden"
+      className={HERO_FRAME}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
@@ -67,9 +72,13 @@ export default function HeroBanner() {
       {/* Soft golden ambient glow */}
       <div className="pointer-events-none absolute inset-0 bg-hero-glow opacity-80" />
 
-      {/* Soft light veil at the top (desktop only) so the transparent navbar's
-          maroon links stay legible. Hidden on mobile per request. */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 hidden h-44 bg-gradient-to-b from-ivory/90 via-ivory/45 to-transparent md:block" />
+      {/* Soft light veil at the top so the transparent navbar's maroon logo and
+          hamburger stay legible over whichever slide is showing. It used to be
+          desktop-only, which left the mobile hamburger sitting on a busy photo
+          with nothing but a text-shadow behind it. Held to 96px on mobile — the
+          navbar's 80px plus a short fade — because the 16:9 hero is only ~220px
+          tall on a phone and a taller veil would wash out half the image. */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-ivory/90 via-ivory/45 to-transparent md:h-44" />
     </section>
   );
 }

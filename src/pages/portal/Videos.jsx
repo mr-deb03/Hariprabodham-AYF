@@ -183,7 +183,7 @@ export default function Videos() {
           </p>
         </Card>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {videos.map((v) => (
             <div
               key={v.id || v.youtube_id}
@@ -250,7 +250,7 @@ export default function Videos() {
               onChange={set("description")}
             />
           </Field>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field label="Category (optional)">
               <input
                 className={inputClass}

@@ -239,7 +239,13 @@ export default function BirthdaySection() {
             {list.length} birthday{list.length === 1 ? "" : "s"}{" "}
             {selDay === "all" ? "in" : "on"} {scopeLabel}
           </p>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {/* grid-cols-1 is load-bearing, not decoration. Without a base track
+              the implicit column is sized `auto`, so it grows to the widest
+              card's max-content — the "Today" card carrying the extra Send-now
+              button — and drags every other card past the screen edge on a
+              phone. grid-cols-1 compiles to repeat(1, minmax(0, 1fr)), and it
+              is the minmax(0, …) that caps the track to the container. */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {list.map((m) => {
               const isToday = m.p.month === todayMonth && m.p.day === todayDay;
               const turns = m.p.year ? thisYear - m.p.year : null;

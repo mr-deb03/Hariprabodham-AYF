@@ -45,6 +45,7 @@
     max-width: 100%;
   }
 
+
   body {
     margin: 0;
     overflow-x: hidden;
@@ -213,6 +214,20 @@
     .section {
       padding-inline: 5rem;
     }
+  }
+
+  /* Instagram's embed.js stamps `min-width: 326px` onto every blockquote it
+     processes. That is wider than the content column on a phone (272px at
+     320px wide), so the embeds hang past the right edge. Let them shrink to
+     whatever the column gives them instead. */
+  .instagram-media {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    /* iframes are content-box by default, so IG's 1px border would otherwise
+       add 2px on top of the 100% width. */
+    box-sizing: border-box !important;
   }
 
   /* Body copy inside a section — capped for a comfortable measure (~70ch). */

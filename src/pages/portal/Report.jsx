@@ -409,7 +409,7 @@ export default function Report() {
             )}
           </Card>
 
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             {rows.map((r) => (
               <Card key={r.mandal}>
                 <div className="mb-3 flex items-center justify-between">

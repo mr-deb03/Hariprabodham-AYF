@@ -15,11 +15,15 @@ import React, { useEffect, useRef, useState } from "react";
  */
 
 // Hidden (pre-reveal) transform for each variant.
+// The horizontal offsets are capped at the page's own gutter (px-6 = 24px below
+// md, px-12 = 48px above it). A larger offset pushes the element past the
+// viewport's right edge, which html{overflow-x:hidden} then silently swallows —
+// the page still measures 16px wider than the screen and drifts sideways.
 const hiddenByVariant = {
   up: "opacity-0 translate-y-[40px]",
   down: "opacity-0 -translate-y-[40px]",
-  left: "opacity-0 -translate-x-[40px]",
-  right: "opacity-0 translate-x-[40px]",
+  left: "opacity-0 -translate-x-[24px] md:-translate-x-[40px]",
+  right: "opacity-0 translate-x-[24px] md:translate-x-[40px]",
   zoom: "opacity-0 scale-95",
   fade: "opacity-0",
   flip: "opacity-0 [transform:perspective(1000px)_rotateX(22deg)_translateY(36px)]",
