@@ -21,38 +21,46 @@ const TIME_LABEL = "8:00 AM – 1:00 PM  ·  6:00 PM – 10:00 PM";
 const REGISTER_URL =
   "https://docs.google.com/forms/d/e/1FAIpQLScpJBfZCT-yeI7tbTMrdOt8yPErBOmYg6PpXeb5pei02Y3TlA/viewform";
 
-const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const pad = (n) => String(n).padStart(2, "0");
 
 /*
- * Counts whole calendar days, not 24-hour blocks — someone looking at this on
- * the evening of the 4th should read "Tomorrow", not "0 days to go". Returns
- * null once the event is over so the chip disappears rather than counting into
- * negative numbers.
+ * Time left until the first session, split into days/hours/minutes/seconds.
+ *
+ * Returns null once the event is over so the timer disappears rather than
+ * counting into negative numbers, and { live: true } while it is running.
+ * Derived from a single millisecond delta so the four figures can never
+ * disagree with each other mid-tick.
  */
-function countdownLabel(now) {
+function timeLeft(now) {
   if (now >= EVENT_END) return null;
-  if (now >= EVENT_START) return "Happening now";
+  if (now >= EVENT_START) return { live: true };
 
-  const days = Math.round(
-    (startOfDay(EVENT_START) - startOfDay(now)) / 86400000
-  );
-  if (days <= 0) return "Starts today";
-  if (days === 1) return "Tomorrow";
-  return `${days} days to go`;
+  const ms = EVENT_START - now;
+  return {
+    live: false,
+    days: Math.floor(ms / 86400000),
+    hours: Math.floor(ms / 3600000) % 24,
+    minutes: Math.floor(ms / 60000) % 60,
+    seconds: Math.floor(ms / 1000) % 60,
+  };
 }
 
 const Banner = () => {
-  const [countdown, setCountdown] = useState(() => countdownLabel(new Date()));
+  const [left, setLeft] = useState(() => timeLeft(new Date()));
 
-  // Hourly is plenty for a day-granularity counter, and it means a tab left
-  // open overnight still rolls over to the right number.
   useEffect(() => {
-    const id = setInterval(
-      () => setCountdown(countdownLabel(new Date())),
-      60 * 60 * 1000
-    );
+    const id = setInterval(() => setLeft(timeLeft(new Date())), 1000);
     return () => clearInterval(id);
   }, []);
+
+  const units = left && !left.live
+    ? [
+        { value: left.days, label: left.days === 1 ? "Day" : "Days" },
+        { value: left.hours, label: "Hrs" },
+        { value: left.minutes, label: "Min" },
+        { value: left.seconds, label: "Sec" },
+      ]
+    : [];
 
   return (
     // min-h rather than a fixed h: the section now carries dates, timings and a
@@ -94,11 +102,48 @@ const Banner = () => {
         </div>
 
         {/* Countdown + CTA */}
-        <div className="flex shrink-0 flex-col items-center gap-4">
-          {countdown && (
+        <div className="flex w-full shrink-0 flex-col items-center gap-4 md:w-auto">
+          {left?.live && (
             <p className="rounded-full border border-gold/40 bg-black/40 px-5 py-2 text-sm font-semibold uppercase tracking-wider text-sand">
-              {countdown}
+              Happening now
             </p>
+          )}
+
+          {units.length > 0 && (
+            <>
+              {/* A figure that changes every second is unusable read aloud, so
+                  the boxes are hidden from assistive tech and this static line
+                  carries the same information at a sane granularity. It has no
+                  aria-live, so it is only read when the region is reached. */}
+              <p className="sr-only">
+                {units[0].value} days and {units[1].value} hours until the
+                parayan begins.
+              </p>
+
+              {/* grid-cols-4 gives four equal minmax(0, 1fr) tracks, so the row
+                  can never push past the container even at 320px. tabular-nums
+                  stops the digits jittering the boxes as they tick. The md width
+                  is explicit because this column is w-auto from md up, and a
+                  bare w-full would collapse the grid to min-content there. */}
+              <div
+                aria-hidden="true"
+                className="grid w-full max-w-[300px] grid-cols-4 gap-2 md:w-[300px]"
+              >
+                {units.map((u) => (
+                  <div
+                    key={u.label}
+                    className="rounded-xl border border-gold/40 bg-black/40 px-1 py-2 text-center backdrop-blur-sm"
+                  >
+                    <span className="block font-display text-2xl font-semibold tabular-nums leading-none text-white md:text-3xl">
+                      {pad(u.value)}
+                    </span>
+                    <span className="mt-1 block text-[10px] font-semibold uppercase tracking-wider text-sand">
+                      {u.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
           <a
             href={REGISTER_URL}
