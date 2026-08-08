@@ -81,7 +81,7 @@ const Banner = () => {
   return (
     // min-h rather than a fixed h: the section carries a title, dates, session
     // times, a timer and a CTA, and a hard height would clip them on a phone.
-    <section className="relative flex min-h-[36rem] items-center overflow-hidden py-20 md:min-h-[40rem]">
+    <section className="relative flex min-h-[32rem] items-center overflow-hidden py-20 md:min-h-[34rem]">
       {/* Parallax background — oversized so the scroll-drift never reveals an edge */}
       <Parallax speed={0.15} className="absolute inset-0">
         <div
@@ -102,30 +102,32 @@ const Banner = () => {
 
         {/* ── Event identity ── */}
         <div className="max-w-xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-gold md:text-sm">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.4em] text-gold md:text-xs">
             Featured Event
           </p>
 
-          {/* Cormorant at display size with tight leading; the gradient runs
-              sand → gold → goldDark so the letterforms read as struck metal
-              rather than flat yellow. leading-[0.9] keeps the ascenders from
-              opening a gap above the word at these sizes. */}
-          {/* The md step stays at 7xl deliberately: md is where the two-column
-              layout starts, so the text column is at its narrowest there and
-              8xl left only ~12px of headroom — enough to wrap if Cormorant
-              fails to load and the wider Georgia fallback substitutes. */}
-          <h2 className="mt-4 bg-gradient-to-br from-sand via-gold to-goldDark bg-clip-text font-display text-[4.25rem] font-semibold leading-[0.9] text-transparent drop-shadow-lg sm:text-7xl md:text-7xl lg:text-8xl xl:text-9xl">
+          {/* Cormorant at display size; the gradient runs sand → gold →
+              goldDark so the letterforms read as struck metal rather than flat
+              yellow, and leading-[0.9] keeps the ascenders from opening a gap
+              above the word.
+
+              The md step holds at 7xl rather than following the ramp: md is
+              where the two-column layout starts, so the text column is at its
+              narrowest there and 8xl left only ~12px of headroom — enough to
+              wrap if Cormorant fails to load and the wider Georgia fallback
+              substitutes. */}
+          <h2 className="mt-3 bg-gradient-to-br from-sand via-gold to-goldDark bg-clip-text font-display text-[4.25rem] font-semibold leading-[0.9] text-transparent drop-shadow-lg sm:text-7xl md:text-7xl lg:text-8xl xl:text-9xl">
             Parayan
           </h2>
-          <p className="mt-2 font-display text-4xl font-medium tracking-[0.35em] text-gold/90 md:text-5xl">
+          <p className="mt-1 font-display text-3xl font-medium tracking-[0.35em] text-gold/90 md:text-4xl">
             2026
           </p>
 
-          <Flourish className="mx-auto mt-7 w-fit md:mx-0" />
+          <Flourish className="mx-auto mt-6 w-fit md:mx-0" />
 
           <time
             dateTime="2026-09-05/2026-09-06"
-            className="mt-7 block font-display text-3xl font-medium text-white md:text-4xl"
+            className="mt-6 block font-display text-2xl font-medium text-white md:text-3xl"
           >
             {DATE_LABEL}
           </time>
@@ -136,7 +138,7 @@ const Banner = () => {
             {SESSIONS.map((s) => (
               <span
                 key={s.name}
-                className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm text-white backdrop-blur-sm md:text-base"
+                className="rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-sm text-white backdrop-blur-sm"
               >
                 <span className="font-semibold text-sand">{s.name}</span>
                 <span className="mx-1.5 text-white/40">·</span>
@@ -177,10 +179,10 @@ const Banner = () => {
                     key={u.label}
                     className="rounded-2xl border border-gold/30 bg-black/50 px-1 py-3 text-center shadow-soft backdrop-blur-sm"
                   >
-                    <span className="block font-display text-4xl font-semibold tabular-nums leading-none text-white sm:text-5xl">
+                    <span className="block font-display text-3xl font-semibold tabular-nums leading-none text-white sm:text-4xl">
                       {pad(u.value)}
                     </span>
-                    <span className="mt-2 block text-[11px] font-semibold uppercase tracking-[0.15em] text-gold">
+                    <span className="mt-2 block text-[10px] font-semibold uppercase tracking-[0.15em] text-gold">
                       {u.label}
                     </span>
                   </div>
