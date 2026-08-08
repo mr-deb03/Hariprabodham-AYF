@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FaYoutube, FaInstagram } from "react-icons/fa";
+import { FaYoutube, FaInstagram, FaPlay } from "react-icons/fa";
 import Reveal from "./Reveal";
 import SectionHeading from "./SectionHeading";
 import {
@@ -119,6 +119,101 @@ function VideoCard({ video, featured = false }) {
   );
 }
 
+/*
+ * A post from the feed, rendered as our own card.
+ *
+ * This replaces Instagram's official blockquote + embed.js. That script stamps
+ * `min-width: 326px` on the blockquote and then sizes the iframe it swaps in
+ * with inline !important rules, so the embeds sat wider than the content column
+ * on every phone and no author CSS could pull them back. Rendering the post
+ * ourselves also drops a third-party script from the critical path.
+ */
+function InstagramCard({ post }) {
+  const caption = (post.caption || "").trim();
+  const isVideo = post.mediaType === "VIDEO";
+
+  return (
+    <a
+      href={post.permalink}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-lg transition-shadow duration-300 hover:shadow-2xl"
+    >
+      <div className="relative aspect-square overflow-hidden bg-cream">
+        <img
+          src={post.thumbnail}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        <span
+          aria-hidden="true"
+          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm"
+        >
+          {isVideo ? <FaPlay className="text-xs" /> : <FaInstagram className="text-sm" />}
+        </span>
+      </div>
+
+      <div className="flex flex-1 flex-col p-5">
+        <p className="line-clamp-3 text-sm leading-relaxed text-textSoft">
+          {caption || "View this post on Instagram"}
+        </p>
+        <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primaryBrown">
+          View on Instagram
+          <span aria-hidden="true" className="transition-transform duration-200 group-hover:translate-x-1">
+            →
+          </span>
+        </span>
+      </div>
+    </a>
+  );
+}
+
+/*
+ * Shown when the feed isn't wired up (REACT_APP_IG_ENDPOINT unset), so all we
+ * hold is the curated permalinks — no thumbnails, no captions. Six identical
+ * blank tiles would read as broken, so the reels become chips on one branded
+ * panel instead. panel-gradient carries the built-in scrim that keeps white
+ * text above AA on the gradient's crimson end.
+ */
+function InstagramLinks({ posts }) {
+  return (
+    <div className="panel-gradient on-dark rounded-3xl p-8 text-center shadow-card md:p-12">
+      <FaInstagram aria-hidden="true" className="mx-auto text-5xl text-white" />
+      <h3 className="mt-4 font-display text-2xl font-semibold text-white md:text-3xl">
+        @hariprabodhamayf
+      </h3>
+      <p className="mx-auto mt-2 max-w-md text-sm text-white">
+        Reels, updates and glimpses of youth life at HariPrabodham.
+      </p>
+
+      <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+        {posts.map((post, index) => (
+          <a
+            key={post.id}
+            href={post.permalink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-white/20 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/30"
+          >
+            <FaPlay aria-hidden="true" className="text-[10px]" />
+            Reel {index + 1}
+          </a>
+        ))}
+        <a
+          href={INSTAGRAM_PROFILE}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex min-h-[44px] items-center rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-primaryBrown transition-transform duration-200 hover:-translate-y-0.5"
+        >
+          Follow →
+        </a>
+      </div>
+    </div>
+  );
+}
+
 function FollowCard({ href, icon: Icon, label, color }) {
   return (
     <a
@@ -184,30 +279,9 @@ export default function MediaGallery() {
   const hasYouTube = ytList.length > 0;
   const hasInstagram = igList.length > 0;
 
-  // Re-run the embed processing whenever the post list actually changes — the
-  // fetched feed swaps the blockquotes out after mount, and IG only renders
-  // what was in the DOM the last time it was asked to process.
-  const igKey = igList.map((p) => p.id).join(",");
-
-  // Load Instagram's embed script, then render the blockquotes. When several
-  // embeds are on one page IG often renders only some on the first pass, so we
-  // nudge it to (re)process a few times until all of them resolve.
-  useEffect(() => {
-    if (!igKey) return;
-    const SRC = "https://www.instagram.com/embed.js";
-    const process = () => window.instgrm && window.instgrm.Embeds.process();
-    if (!document.querySelector(`script[src="${SRC}"]`)) {
-      const script = document.createElement("script");
-      script.src = SRC;
-      script.async = true;
-      script.onload = process;
-      document.body.appendChild(script);
-    } else {
-      process();
-    }
-    const timers = [300, 1200, 3000].map((delay) => setTimeout(process, delay));
-    return () => timers.forEach(clearTimeout);
-  }, [igKey]);
+  // Only the Edge Function returns thumbnails; the curated fallback is bare
+  // permalinks. That split decides which of the two Instagram layouts renders.
+  const withThumbs = igList.filter((p) => p.thumbnail);
 
   return (
     <section className="bg-white section">
@@ -258,19 +332,23 @@ export default function MediaGallery() {
           className="mb-12 mt-24"
         />
 
-        {hasInstagram ? (
+        {withThumbs.length > 0 ? (
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {igList.map((post, index) => (
-              <Reveal key={post.id} variant="flip" delay={index * 100}>
-                <blockquote
-                  className="instagram-media"
-                  data-instgrm-permalink={post.permalink}
-                  data-instgrm-version="14"
-                  style={{ width: "100%", margin: 0 }}
-                />
+            {withThumbs.map((post, index) => (
+              <Reveal
+                key={post.id}
+                variant="flip"
+                delay={index * 100}
+                className="h-full"
+              >
+                <InstagramCard post={post} />
               </Reveal>
             ))}
           </div>
+        ) : hasInstagram ? (
+          <Reveal>
+            <InstagramLinks posts={igList} />
+          </Reveal>
         ) : (
           <Reveal>
             <FollowCard

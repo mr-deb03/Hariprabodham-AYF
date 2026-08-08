@@ -14,7 +14,10 @@ const EVENT_START = new Date(2026, 8, 5, 8, 0, 0); // Sat 5 Sep 2026, 08:00
 const EVENT_END = new Date(2026, 8, 6, 22, 0, 0); //  Sun 6 Sep 2026, 22:00
 
 const DATE_LABEL = "5 & 6 September 2026";
-const TIME_LABEL = "8:00 AM – 1:00 PM  ·  6:00 PM – 10:00 PM";
+const SESSIONS = [
+  { name: "Morning", time: "8:00 AM – 1:00 PM" },
+  { name: "Evening", time: "6:00 PM – 10:00 PM" },
+];
 
 // TODO: still the Guru Purnima form — swap for the Parayan 2026 registration
 // link once it exists.
@@ -45,6 +48,18 @@ function timeLeft(now) {
   };
 }
 
+/* Hairline rule with a centred diamond — the section divider used on temple
+   invitations, and the one piece of ornament the banner gets. */
+function Flourish({ className = "" }) {
+  return (
+    <div aria-hidden="true" className={`flex items-center gap-3 ${className}`}>
+      <span className="h-px w-10 bg-gradient-to-r from-transparent to-gold/70 md:w-14" />
+      <span className="text-[10px] leading-none text-gold">&#10022;</span>
+      <span className="h-px w-10 bg-gradient-to-l from-transparent to-gold/70 md:w-14" />
+    </div>
+  );
+}
+
 const Banner = () => {
   const [left, setLeft] = useState(() => timeLeft(new Date()));
 
@@ -53,19 +68,20 @@ const Banner = () => {
     return () => clearInterval(id);
   }, []);
 
-  const units = left && !left.live
-    ? [
-        { value: left.days, label: left.days === 1 ? "Day" : "Days" },
-        { value: left.hours, label: "Hrs" },
-        { value: left.minutes, label: "Min" },
-        { value: left.seconds, label: "Sec" },
-      ]
-    : [];
+  const units =
+    left && !left.live
+      ? [
+          { value: left.days, label: left.days === 1 ? "Day" : "Days" },
+          { value: left.hours, label: "Hrs" },
+          { value: left.minutes, label: "Min" },
+          { value: left.seconds, label: "Sec" },
+        ]
+      : [];
 
   return (
-    // min-h rather than a fixed h: the section now carries dates, timings and a
-    // countdown, and on a narrow phone a hard 45vh would clip them.
-    <section className="relative flex min-h-[45vh] items-center overflow-hidden py-16">
+    // min-h rather than a fixed h: the section carries a title, dates, session
+    // times, a timer and a CTA, and a hard height would clip them on a phone.
+    <section className="relative flex min-h-[32rem] items-center overflow-hidden py-20 md:min-h-[34rem]">
       {/* Parallax background — oversized so the scroll-drift never reveals an edge */}
       <Parallax speed={0.15} className="absolute inset-0">
         <div
@@ -74,37 +90,61 @@ const Banner = () => {
         />
       </Parallax>
 
-      {/* Overlay */}
-      <div aria-hidden="true" className="absolute inset-0 bg-black/60" />
+      {/* Directional scrim rather than a flat wash: on desktop the copy sits
+          left, so the dark end follows it and the photograph stays readable on
+          the right. Stacked layouts get an even veil instead. */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black/80 md:bg-gradient-to-r md:from-black/85 md:via-black/65 md:to-black/40"
+      />
 
-      <Reveal className="relative z-10 flex w-full flex-col items-center justify-center gap-8 px-8 text-center md:flex-row md:justify-between md:px-20 md:text-left">
+      <Reveal className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center gap-12 px-6 text-center md:flex-row md:items-center md:justify-between md:gap-10 md:px-10 md:text-left">
 
-        {/* Title — palette gold rather than raw Tailwind yellows, and the
-            eyebrow at full strength (sand) instead of a faded off-brand tint */}
-        <div>
-          <p className="mb-2 text-sm font-semibold uppercase tracking-[0.3em] text-sand">
+        {/* ── Event identity ── */}
+        <div className="max-w-xl">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.4em] text-gold md:text-xs">
             Featured Event
           </p>
-          <h2 className="bg-gradient-to-r from-gold via-sand to-gold bg-clip-text font-display text-5xl font-semibold text-transparent drop-shadow-lg md:text-7xl">
-            Parayan
-            <span className="ml-3 text-3xl md:text-5xl">2026</span>
-          </h2>
 
-          {/* <time> so the date is machine-readable; the dateTime span covers
-              both days of the parayan. */}
+          {/* Cormorant at display size with tight leading; the gradient runs
+              sand → gold → goldDark so the letterforms read as struck metal
+              rather than flat yellow. */}
+          <h2 className="mt-3 bg-gradient-to-br from-sand via-gold to-goldDark bg-clip-text font-display text-[3.5rem] font-semibold leading-[0.95] text-transparent drop-shadow-lg sm:text-6xl md:text-7xl lg:text-8xl">
+            Parayan
+          </h2>
+          <p className="mt-1 font-display text-3xl font-medium tracking-[0.35em] text-gold/90 md:text-4xl">
+            2026
+          </p>
+
+          <Flourish className="mx-auto mt-6 w-fit md:mx-0" />
+
           <time
             dateTime="2026-09-05/2026-09-06"
-            className="mt-4 block text-lg font-medium text-white"
+            className="mt-6 block font-display text-2xl font-medium text-white md:text-3xl"
           >
             {DATE_LABEL}
           </time>
-          <p className="mt-1 text-sm text-sand md:text-base">{TIME_LABEL}</p>
+
+          {/* Two sessions, two pills — a single run-on line of four timestamps
+              was the hardest thing on the banner to parse at a glance. */}
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2 md:justify-start">
+            {SESSIONS.map((s) => (
+              <span
+                key={s.name}
+                className="rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-sm text-white backdrop-blur-sm"
+              >
+                <span className="font-semibold text-sand">{s.name}</span>
+                <span className="mx-1.5 text-white/40">·</span>
+                {s.time}
+              </span>
+            ))}
+          </div>
         </div>
 
-        {/* Countdown + CTA */}
-        <div className="flex w-full shrink-0 flex-col items-center gap-4 md:w-auto">
+        {/* ── Countdown + CTA ── */}
+        <div className="flex w-full max-w-[340px] shrink-0 flex-col items-center gap-5 md:w-[340px]">
           {left?.live && (
-            <p className="rounded-full border border-gold/40 bg-black/40 px-5 py-2 text-sm font-semibold uppercase tracking-wider text-sand">
+            <p className="w-full rounded-2xl border border-gold/40 bg-black/50 px-5 py-4 text-center text-sm font-semibold uppercase tracking-[0.2em] text-sand backdrop-blur-sm">
               Happening now
             </p>
           )}
@@ -122,22 +162,20 @@ const Banner = () => {
 
               {/* grid-cols-4 gives four equal minmax(0, 1fr) tracks, so the row
                   can never push past the container even at 320px. tabular-nums
-                  stops the digits jittering the boxes as they tick. The md width
-                  is explicit because this column is w-auto from md up, and a
-                  bare w-full would collapse the grid to min-content there. */}
+                  stops the digits jittering the boxes as they tick. */}
               <div
                 aria-hidden="true"
-                className="grid w-full max-w-[300px] grid-cols-4 gap-2 md:w-[300px]"
+                className="grid w-full grid-cols-4 gap-2 sm:gap-3"
               >
                 {units.map((u) => (
                   <div
                     key={u.label}
-                    className="rounded-xl border border-gold/40 bg-black/40 px-1 py-2 text-center backdrop-blur-sm"
+                    className="rounded-2xl border border-gold/30 bg-black/50 px-1 py-3 text-center shadow-soft backdrop-blur-sm"
                   >
-                    <span className="block font-display text-2xl font-semibold tabular-nums leading-none text-white md:text-3xl">
+                    <span className="block font-display text-3xl font-semibold tabular-nums leading-none text-white sm:text-4xl">
                       {pad(u.value)}
                     </span>
-                    <span className="mt-1 block text-[10px] font-semibold uppercase tracking-wider text-sand">
+                    <span className="mt-2 block text-[10px] font-semibold uppercase tracking-[0.15em] text-gold">
                       {u.label}
                     </span>
                   </div>
@@ -145,11 +183,12 @@ const Banner = () => {
               </div>
             </>
           )}
+
           <a
             href={REGISTER_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-primary"
+            className="btn-primary w-full"
           >
             Register Now →
           </a>
