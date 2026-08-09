@@ -71,8 +71,8 @@ const isValidMobile = (v) => {
 };
 
 const field =
-  "w-full rounded-lg border border-bronze/25 bg-white px-4 py-2.5 text-ink outline-none transition-colors duration-200 focus:border-primaryBrown focus:ring-2 focus:ring-primaryBrown/20";
-const labelClass = "mb-1.5 block text-sm font-semibold text-ink";
+  "w-full rounded-lg border border-bronze/25 bg-white px-3 py-2 text-sm text-ink outline-none transition-colors duration-200 focus:border-primaryBrown focus:ring-2 focus:ring-primaryBrown/20";
+const labelClass = "mb-1 block text-sm font-semibold text-ink";
 const required = <span aria-hidden="true" className="text-red-600"> *</span>;
 
 /*
@@ -107,7 +107,7 @@ function ChipGroup({ name, legend, options, value, onChange }) {
               className="peer sr-only"
             />
             <span
-              className={`block rounded-full border px-4 py-2 text-sm transition-colors duration-200 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-maroon ${
+              className={`block rounded-full border px-3 py-1.5 text-sm transition-colors duration-200 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-maroon ${
                 value === o
                   ? "border-maroon bg-maroon text-onDark"
                   : "border-bronze/25 bg-white text-ink hover:bg-cream"
@@ -224,8 +224,19 @@ export default function EventRegistrationForm({
   const done = status === "success" || status === "duplicate";
 
   return (
+    /*
+     * The overlay never scrolls — the panel does, internally.
+     *
+     * Previously the overlay was the scroll container AND carried
+     * backdrop-blur. A blurred backdrop has to be re-sampled every scroll
+     * frame, and the page underneath is full of will-change:transform layers
+     * from every Reveal, which made chips and fields flicker out mid-scroll on
+     * real devices. No blur, and a fixed overlay with a capped-height panel,
+     * removes both causes. overscroll-contain stops the scroll chaining into
+     * the page behind once the form hits its end.
+     */
     <div
-      className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm sm:p-6"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4"
       onMouseDown={onClose}
     >
       <div
@@ -234,14 +245,14 @@ export default function EventRegistrationForm({
         aria-modal="true"
         aria-labelledby="reg-title"
         onMouseDown={(e) => e.stopPropagation()}
-        className="my-8 w-full max-w-2xl rounded-2xl bg-white shadow-card"
+        className="flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-card"
       >
-        <div className="flex items-start justify-between gap-4 border-b border-sand/70 px-6 py-5">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-sand/70 px-5 py-4">
           <div>
-            <h2 id="reg-title" className="font-display text-2xl text-maroon">
+            <h2 id="reg-title" className="font-display text-xl text-maroon">
               Register for {eventName}
             </h2>
-            <p className="mt-1 text-sm text-textSoft">
+            <p className="mt-0.5 text-xs text-textSoft">
               To be filled by the respective karyakarta.
             </p>
           </div>
@@ -250,18 +261,20 @@ export default function EventRegistrationForm({
             type="button"
             onClick={onClose}
             aria-label="Close registration form"
-            className="-mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xl leading-none text-textMuted transition-colors duration-200 hover:bg-cream"
+            className="-mr-1.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg leading-none text-textMuted transition-colors duration-200 hover:bg-cream"
           >
             ✕
           </button>
         </div>
 
+        {/* min-h-0 is what lets a flex child actually overflow rather than
+            stretching its parent past the max-height. */}
         {done ? (
-          <div className="px-6 py-12 text-center">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-10 text-center">
             {status === "success" ? (
               <>
-                <FaCheckCircle aria-hidden="true" className="mx-auto text-5xl text-green-600" />
-                <h3 className="mt-5 font-display text-2xl text-maroon">
+                <FaCheckCircle aria-hidden="true" className="mx-auto text-4xl text-green-600" />
+                <h3 className="mt-4 font-display text-xl text-maroon">
                   Registration confirmed
                 </h3>
                 <p className="mx-auto mt-2 max-w-sm text-textSoft">
@@ -271,8 +284,8 @@ export default function EventRegistrationForm({
               </>
             ) : (
               <>
-                <FaInfoCircle aria-hidden="true" className="mx-auto text-5xl text-saffronText" />
-                <h3 className="mt-5 font-display text-2xl text-maroon">
+                <FaInfoCircle aria-hidden="true" className="mx-auto text-4xl text-saffronText" />
+                <h3 className="mt-4 font-display text-xl text-maroon">
                   Already registered
                 </h3>
                 <p className="mx-auto mt-2 max-w-sm text-textSoft">
@@ -281,7 +294,7 @@ export default function EventRegistrationForm({
                 </p>
               </>
             )}
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
               <button type="button" onClick={onClose} className="btn-primary">
                 Done
               </button>
@@ -298,7 +311,10 @@ export default function EventRegistrationForm({
             </div>
           </div>
         ) : (
-          <form onSubmit={submit} className="space-y-5 px-6 py-6">
+          <form
+            onSubmit={submit}
+            className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 py-5"
+          >
             <div>
               <label htmlFor="reg-reference" className={labelClass}>
                 Whose reference?{required}
