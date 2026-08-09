@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Reveal from "./Reveal";
 import Parallax from "./Parallax";
+import EventRegistrationForm from "./EventRegistrationForm";
 import forest from "../assets/home/forest.jpeg";
 
 /*
@@ -19,10 +20,11 @@ const SESSIONS = [
   { name: "Evening", time: "6:00 PM – 10:00 PM" },
 ];
 
-// TODO: still the Guru Purnima form — swap for the Parayan 2026 registration
-// link once it exists.
-const REGISTER_URL =
-  "https://docs.google.com/forms/d/e/1FAIpQLScpJBfZCT-yeI7tbTMrdOt8yPErBOmYg6PpXeb5pei02Y3TlA/viewform";
+// EVENT_SLUG is the key registrations are stored and de-duplicated against, so
+// it must stay stable for the life of the event — renaming it would let anyone
+// already registered sign up a second time. EVENT_NAME is only the label.
+const EVENT_SLUG = "parayan-2026";
+const EVENT_NAME = "Parayan 2026";
 
 const pad = (n) => String(n).padStart(2, "0");
 
@@ -62,6 +64,7 @@ function Flourish({ className = "" }) {
 
 const Banner = () => {
   const [left, setLeft] = useState(() => timeLeft(new Date()));
+  const [registerOpen, setRegisterOpen] = useState(false);
 
   useEffect(() => {
     const id = setInterval(() => setLeft(timeLeft(new Date())), 1000);
@@ -79,8 +82,13 @@ const Banner = () => {
       : [];
 
   return (
-    // min-h rather than a fixed h: the section carries a title, dates, session
-    // times, a timer and a CTA, and a hard height would clip them on a phone.
+    // The dialog is a sibling of the section, not a child. The section is
+    // overflow-hidden for the parallax, and while that does not clip a
+    // position:fixed descendant today, it would the moment any ancestor gained
+    // a transform and became its containing block.
+    <>
+    {/* min-h rather than a fixed h: the section carries a title, dates, session
+        times, a timer and a CTA, and a hard height would clip them on a phone. */}
     <section className="relative flex min-h-[32rem] items-center overflow-hidden py-20 md:min-h-[34rem]">
       {/* Parallax background — oversized so the scroll-drift never reveals an edge */}
       <Parallax speed={0.15} className="absolute inset-0">
@@ -191,17 +199,24 @@ const Banner = () => {
             </>
           )}
 
-          <a
-            href={REGISTER_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={() => setRegisterOpen(true)}
             className="btn-primary w-full"
           >
             Register Now →
-          </a>
+          </button>
         </div>
       </Reveal>
     </section>
+
+    <EventRegistrationForm
+      eventSlug={EVENT_SLUG}
+      eventName={EVENT_NAME}
+      open={registerOpen}
+      onClose={() => setRegisterOpen(false)}
+    />
+    </>
   );
 };
 

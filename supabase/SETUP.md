@@ -12,6 +12,10 @@ Supabase project to store accounts and data. ~10 minutes, one time.
 1. In the project: **SQL Editor** → **New query**.
 2. Open `supabase/schema.sql` from this repo, copy everything, paste, **Run**.
    It should say "Success".
+3. Repeat for `supabase/event_registrations.sql` — this one powers the
+   **Register Now** form on the home-page featured-event banner. It must be run
+   before the button will work; until then the form shows a "not connected yet"
+   notice instead of saving. See §8 below.
 
 ## 3. (Recommended) Turn off email confirmation
 So karyakartas can register without needing to click an email link — the
@@ -151,6 +155,42 @@ curl "https://<PROJECT_REF>.supabase.co/functions/v1/instagram-feed?limit=3"
 ```sql
 select id, expires_at, updated_at from public.instagram_token;  -- never select the token
 ```
+
+## 8. Event registrations (home-page banner)
+
+Run `supabase/event_registrations.sql` (§2 step 3). Nothing else to configure —
+it uses the same `REACT_APP_SUPABASE_URL` / `REACT_APP_SUPABASE_ANON_KEY` the
+portal already uses.
+
+**How the duplicate rule works.** One registration per **mobile number per
+event**. The number is normalised to its last 10 digits before comparison, so
+`+91 98765 43210`, `098765-43210` and `9876543210` all count as the same
+person. A repeat submission shows **"Already registered"**.
+
+The check runs off a unique database index, not a lookup — the form just
+inserts and reads the `23505` error back. That matters for two reasons: it
+cannot race two people submitting the same number at the same moment, and the
+browser never needs read access, so **a visitor can't enumerate the
+registration list**. Only admins can read the table.
+
+**Changing the event.** `EVENT_SLUG` and `EVENT_NAME` live at the top of
+`src/components/Banner.jsx`. Registrations key off the slug, so a new event
+needs a **new slug** — reusing an old one would tell everyone who registered
+last time that they're already registered.
+
+**Exporting the list.** SQL Editor:
+```sql
+select created_at, full_name, mobile, reference, group_name,
+       occupation, education, education_status, specialization
+from public.event_registrations
+where event_slug = 'parayan-2026'
+order by created_at;
+```
+
+**One caveat:** the form is public, so anyone can submit. The unique index caps
+it at one row per real number, but nothing stops made-up numbers being entered.
+If that becomes a problem, the fix is a captcha or moving submission behind an
+Edge Function with rate limiting.
 
 ---
 
