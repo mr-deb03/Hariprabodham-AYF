@@ -182,6 +182,11 @@ function Chrome() {
                     Members
                   </NavLink>
                 )}
+                {isAdmin && (
+                  <NavLink to="/portal/admin/registrations" className={linkClass}>
+                    Registrations
+                  </NavLink>
+                )}
               </nav>
               <AccountMenu />
             </div>

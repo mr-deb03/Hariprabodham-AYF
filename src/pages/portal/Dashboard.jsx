@@ -90,6 +90,14 @@ export default function Dashboard() {
             accent="logoBlue"
           />
         )}
+        {isAdmin && (
+          <Tile
+            to="/portal/admin/registrations"
+            title="Event Registrations"
+            desc="Who has signed up through the home-page form."
+            accent="logoBlue"
+          />
+        )}
         <Tile
           to="/portal/videos"
           title="Satsang Videos"

@@ -23,6 +23,9 @@ const PortalDashboard = lazy(() => import("./pages/portal/Dashboard"));
 const PortalProfile = lazy(() => import("./pages/portal/Profile"));
 const PortalAdminApprovals = lazy(() => import("./pages/portal/AdminApprovals"));
 const PortalAdminMembers = lazy(() => import("./pages/portal/AdminMembers"));
+const PortalAdminRegistrations = lazy(() =>
+  import("./pages/portal/AdminRegistrations")
+);
 const PortalAttendance = lazy(() => import("./pages/portal/Attendance"));
 const PortalReport = lazy(() => import("./pages/portal/Report"));
 const PortalVideos = lazy(() => import("./pages/portal/Videos"));
@@ -102,6 +105,14 @@ function App() {
             element={
               <RequireAuth admin>
                 <PortalAdminMembers />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="admin/registrations"
+            element={
+              <RequireAuth admin>
+                <PortalAdminRegistrations />
               </RequireAuth>
             }
           />
