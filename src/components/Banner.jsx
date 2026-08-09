@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Reveal from "./Reveal";
 import Parallax from "./Parallax";
 import EventRegistrationForm from "./EventRegistrationForm";
@@ -62,24 +62,78 @@ function Flourish({ className = "" }) {
   );
 }
 
-const Banner = () => {
+/*
+ * The ticking clock owns its own state.
+ *
+ * It used to live in Banner, which meant the whole banner — including the
+ * registration dialog rendered alongside it — re-rendered once a second while
+ * someone was filling the form in. Keeping the interval down here means Banner
+ * only re-renders when the dialog opens or closes.
+ */
+function Countdown() {
   const [left, setLeft] = useState(() => timeLeft(new Date()));
-  const [registerOpen, setRegisterOpen] = useState(false);
 
   useEffect(() => {
     const id = setInterval(() => setLeft(timeLeft(new Date())), 1000);
     return () => clearInterval(id);
   }, []);
 
-  const units =
-    left && !left.live
-      ? [
-          { value: left.days, label: left.days === 1 ? "Day" : "Days" },
-          { value: left.hours, label: "Hrs" },
-          { value: left.minutes, label: "Min" },
-          { value: left.seconds, label: "Sec" },
-        ]
-      : [];
+  if (!left) return null;
+
+  if (left.live) {
+    return (
+      <p className="w-full rounded-2xl border border-gold/40 bg-black/50 px-5 py-4 text-center text-sm font-semibold uppercase tracking-[0.2em] text-sand backdrop-blur-sm">
+        Happening now
+      </p>
+    );
+  }
+
+  const units = [
+    { value: left.days, label: left.days === 1 ? "Day" : "Days" },
+    { value: left.hours, label: "Hrs" },
+    { value: left.minutes, label: "Min" },
+    { value: left.seconds, label: "Sec" },
+  ];
+
+  return (
+    <>
+      {/* A figure that changes every second is unusable read aloud, so the
+          boxes are hidden from assistive tech and this static line carries the
+          same information at a sane granularity. It has no aria-live, so it is
+          only read when the region is reached. */}
+      <p className="sr-only">
+        {units[0].value} days and {units[1].value} hours until the parayan
+        begins.
+      </p>
+
+      {/* grid-cols-4 gives four equal minmax(0, 1fr) tracks, so the row can
+          never push past the container even at 320px. tabular-nums stops the
+          digits jittering the boxes as they tick. */}
+      <div aria-hidden="true" className="grid w-full grid-cols-4 gap-2 sm:gap-3">
+        {units.map((u) => (
+          <div
+            key={u.label}
+            className="rounded-2xl border border-gold/30 bg-black/50 px-1 py-3 text-center shadow-soft backdrop-blur-sm"
+          >
+            <span className="block font-display text-3xl font-semibold tabular-nums leading-none text-white sm:text-4xl">
+              {pad(u.value)}
+            </span>
+            <span className="mt-2 block text-[10px] font-semibold uppercase tracking-[0.15em] text-gold">
+              {u.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+const Banner = () => {
+  const [registerOpen, setRegisterOpen] = useState(false);
+
+  // Stable identity, so opening the dialog doesn't hand it a fresh callback
+  // that could restart its effects.
+  const closeRegister = useCallback(() => setRegisterOpen(false), []);
 
   return (
     // The dialog is a sibling of the section, not a child. The section is
@@ -158,46 +212,7 @@ const Banner = () => {
 
         {/* ── Countdown + CTA ── */}
         <div className="flex w-full max-w-[340px] shrink-0 flex-col items-center gap-5 md:w-[340px]">
-          {left?.live && (
-            <p className="w-full rounded-2xl border border-gold/40 bg-black/50 px-5 py-4 text-center text-sm font-semibold uppercase tracking-[0.2em] text-sand backdrop-blur-sm">
-              Happening now
-            </p>
-          )}
-
-          {units.length > 0 && (
-            <>
-              {/* A figure that changes every second is unusable read aloud, so
-                  the boxes are hidden from assistive tech and this static line
-                  carries the same information at a sane granularity. It has no
-                  aria-live, so it is only read when the region is reached. */}
-              <p className="sr-only">
-                {units[0].value} days and {units[1].value} hours until the
-                parayan begins.
-              </p>
-
-              {/* grid-cols-4 gives four equal minmax(0, 1fr) tracks, so the row
-                  can never push past the container even at 320px. tabular-nums
-                  stops the digits jittering the boxes as they tick. */}
-              <div
-                aria-hidden="true"
-                className="grid w-full grid-cols-4 gap-2 sm:gap-3"
-              >
-                {units.map((u) => (
-                  <div
-                    key={u.label}
-                    className="rounded-2xl border border-gold/30 bg-black/50 px-1 py-3 text-center shadow-soft backdrop-blur-sm"
-                  >
-                    <span className="block font-display text-3xl font-semibold tabular-nums leading-none text-white sm:text-4xl">
-                      {pad(u.value)}
-                    </span>
-                    <span className="mt-2 block text-[10px] font-semibold uppercase tracking-[0.15em] text-gold">
-                      {u.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
+          <Countdown />
 
           <button
             type="button"
@@ -214,7 +229,7 @@ const Banner = () => {
       eventSlug={EVENT_SLUG}
       eventName={EVENT_NAME}
       open={registerOpen}
-      onClose={() => setRegisterOpen(false)}
+      onClose={closeRegister}
     />
     </>
   );

@@ -134,11 +134,27 @@ export default function EventRegistrationForm({
   const panelRef = useRef(null);
   const closeRef = useRef(null);
 
-  // Esc to close, and lock the page behind the dialog so the banner doesn't
-  // scroll under it on touch.
+  // Held in a ref so the effect below can depend on `open` alone. Callers
+  // routinely pass an inline arrow, which is a new function on every parent
+  // render — as a dependency it would re-run the effect constantly.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  /*
+   * Esc to close, page locked behind the dialog, focus moved to the close
+   * button on open.
+   *
+   * Depends on `open` ONLY. It used to list `onClose` too, and because the
+   * banner's countdown re-renders the parent every second, that handed the
+   * effect a fresh function each tick — so it re-ran, and its focus() call
+   * yanked focus away from whatever the user was using once a second. That is
+   * what made open dropdowns close on their own.
+   */
   useEffect(() => {
     if (!open) return undefined;
-    const onKey = (e) => e.key === "Escape" && onClose?.();
+    const onKey = (e) => e.key === "Escape" && onCloseRef.current?.();
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -147,7 +163,7 @@ export default function EventRegistrationForm({
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [open, onClose]);
+  }, [open]);
 
   // Start clean each time it opens, so a previous success or duplicate notice
   // doesn't greet the next person.
