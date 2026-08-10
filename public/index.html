@@ -2,6 +2,40 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+
+    <!--
+      Google Analytics (GA4) — property G-KTQR53PVPR.
+
+      Placed immediately after <meta charset> rather than literally first in
+      <head>: the character encoding has to appear within the first 1024 bytes
+      of the document, and putting a script above it risks pushing it out.
+      Everything else still loads after this, so the tag is as early as it can
+      safely be.
+
+      This is a single-page app with one index.html, so this one tag covers
+      every route — no per-page copies, which is what Google's "don't add more
+      than one" warning is about.
+
+      No route-change tracking is wired up here. GA4's Enhanced Measurement has
+      a "page changes based on browser history events" option that is meant to
+      cover React Router navigation, and adding our own listener on top would
+      double-count every screen — so the correct order is to check GA Realtime
+      first and only add one if inner pages genuinely never appear.
+
+      Local testing was inconclusive: gtag fired once on load and nothing on a
+      client-side nav to /about, but measurement hits were blocked in that test
+      and the property config may not apply off the live domain. Verify on the
+      real site before concluding either way.
+    -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KTQR53PVPR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-KTQR53PVPR');
+    </script>
+
     <link rel="icon" href="%PUBLIC_URL%/HPAYF.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#FFF8F0" />
