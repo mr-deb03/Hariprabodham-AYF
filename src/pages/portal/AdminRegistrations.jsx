@@ -343,7 +343,17 @@ export default function AdminRegistrations() {
                   <th className={thCell}>Occupation</th>
                   <th className={thCell}>Education</th>
                   <th className={thCell}>Specialization</th>
-                  <th className={`${thCell} text-right`}>Actions</th>
+                  {/* Pinned to the right edge. The table is wider than the card
+                      on anything under ~1100px, and Actions is the last of nine
+                      columns — unpinned, the only destructive control on the
+                      page sits off-screen behind a sideways scroll. The
+                      background must be opaque or the cells it covers show
+                      through; this is bg-cream/60 over white, pre-mixed. */}
+                  <th
+                    className={`${thCell} sticky right-0 border-l border-sand bg-[#FBF8F1] text-right`}
+                  >
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -372,7 +382,9 @@ export default function AdminRegistrations() {
                       </span>
                     </td>
                     <td className={tdCell}>{r.specialization}</td>
-                    <td className={`${tdCell} text-right`}>
+                    <td
+                      className={`${tdCell} sticky right-0 border-l border-sand bg-white text-right`}
+                    >
                       <div className="flex justify-end gap-1.5">
                         <PortalButton
                           variant="outline"
