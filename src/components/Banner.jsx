@@ -16,8 +16,8 @@ const EVENT_END = new Date(2026, 8, 6, 22, 0, 0); //  Sun 6 Sep 2026, 22:00
 
 const DATE_LABEL = "5 & 6 September 2026";
 const SESSIONS = [
-  { name: "Morning", time: "8:00 AM – 1:00 PM" },
-  { name: "Evening", time: "6:00 PM – 10:00 PM" },
+  { name: "Morning", time: "8:00 AM – 10:00 AM" },
+  { name: "Evening", time: "7:00 PM – 10:00 PM" },
 ];
 
 // EVENT_SLUG is the key registrations are stored and de-duplicated against, so

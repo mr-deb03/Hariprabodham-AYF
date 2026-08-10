@@ -1,6 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FaCheckCircle, FaInfoCircle } from "react-icons/fa";
 import { supabase, supabaseConfigured } from "../lib/supabaseClient";
+import {
+  EDUCATION_LEVELS,
+  EDUCATION_STATUSES,
+  GROUPS,
+  OCCUPATIONS,
+  isValidMobile,
+} from "../lib/registrationOptions";
 
 /*
  * On-site event registration, replacing the Google Form the banner used to
@@ -14,43 +21,6 @@ import { supabase, supabaseConfigured } from "../lib/supabaseClient";
  * SQLSTATE 23505 off the failure.
  */
 
-// Straight from the Google Form. The mandal names overlap portal/constants.js
-// but this list is not the same thing — it carries VIP and PARENT, which are
-// not mandals — so it stays declared here rather than derived from MANDALS.
-const OCCUPATIONS = ["Student", "Job", "Business"];
-
-const EDUCATION_LEVELS = [
-  "VIII-IX (School)",
-  "SSC",
-  "HSC (11th, 12th)",
-  "Diploma",
-  "Graduate (B.com, BSc, etc)",
-  "Engineering (BE, B.Tech, etc)",
-  "Medical (MBBS, BAMS, BDS, etc)",
-  "Architect (B.Arch)",
-  "Post-Graduate",
-  "PhD",
-  "Other",
-];
-
-const EDUCATION_STATUSES = ["Pursuing", "Completed"];
-
-const GROUPS = [
-  "Harikrupa (Ghatkopar)",
-  "Sarvamangal (Vikhroli)",
-  "Brahmdarshan",
-  "Charanruj",
-  "Dasatva",
-  "Samanvay",
-  "Gurukrupa (Mulund)",
-  "Santkrupa (Dombivli)",
-  "Suhradam (Badlapur)",
-  "PrabhuDarshan (Nerul)",
-  "AksharBhrahm (Rajasthan)",
-  "VIP",
-  "PARENT",
-];
-
 const EMPTY = {
   reference: "",
   full_name: "",
@@ -60,14 +30,6 @@ const EMPTY = {
   education_status: "",
   specialization: "",
   group_name: "",
-};
-
-// Same rule as the Smruti form: a 10-digit Indian mobile, optionally carrying
-// +91 / 0 / spaces / dashes.
-const digitsOf = (v) => String(v || "").replace(/\D/g, "");
-const isValidMobile = (v) => {
-  const d = digitsOf(v);
-  return /^[6-9]\d{9}$/.test(d) || /^91[6-9]\d{9}$/.test(d) || /^0[6-9]\d{9}$/.test(d);
 };
 
 const field =

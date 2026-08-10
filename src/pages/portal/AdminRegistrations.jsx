@@ -4,6 +4,8 @@ import { supabase, fetchAllRows } from "../../lib/supabaseClient";
 import {
   Alert,
   Card,
+  Field,
+  Modal,
   PageHeader,
   PortalButton,
   Spinner,
@@ -13,6 +15,13 @@ import {
   tdCell,
   thCell,
 } from "../../portal/ui";
+import {
+  EDUCATION_LEVELS,
+  EDUCATION_STATUSES,
+  GROUPS,
+  OCCUPATIONS,
+  isValidMobile,
+} from "../../lib/registrationOptions";
 
 /*
  * Event registrations submitted through the home-page banner form.
@@ -32,13 +41,35 @@ const fmtDate = (iso) =>
     minute: "2-digit",
   });
 
+// Only these columns are editable. event_slug is left out deliberately: it is
+// the de-duplication key, and moving a row between events could silently
+// collide with an existing registration there.
+const EDITABLE = [
+  "full_name",
+  "mobile",
+  "reference",
+  "group_name",
+  "occupation",
+  "education",
+  "education_status",
+  "specialization",
+];
+
 export default function AdminRegistrations() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [event, setEvent] = useState("all");
   const [group, setGroup] = useState("all");
   const [q, setQ] = useState("");
+
+  const [editing, setEditing] = useState(null); // row being edited
+  const [draft, setDraft] = useState({});
+  const [formError, setFormError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(null); // row awaiting confirmation
+  const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -96,6 +127,65 @@ export default function AdminRegistrations() {
     );
     return [...counts.entries()].sort((a, b) => b[1] - a[1]);
   }, [filtered]);
+
+  const openEdit = (row) => {
+    setFormError("");
+    setEditing(row);
+    setDraft(Object.fromEntries(EDITABLE.map((k) => [k, row[k] ?? ""])));
+  };
+
+  const saveEdit = async (e) => {
+    e.preventDefault();
+    if (!isValidMobile(draft.mobile)) {
+      setFormError("Enter a valid 10-digit mobile number.");
+      return;
+    }
+    setFormError("");
+    setSaving(true);
+
+    const patch = Object.fromEntries(
+      EDITABLE.map((k) => [k, typeof draft[k] === "string" ? draft[k].trim() : draft[k]])
+    );
+    const { error: err } = await supabase
+      .from("event_registrations")
+      .update(patch)
+      .eq("id", editing.id);
+    setSaving(false);
+
+    if (err) {
+      // Same unique index the public form hits. Changing a mobile to one that
+      // is already registered for this event has to be refused, not silently
+      // dropped.
+      setFormError(
+        err.code === "23505"
+          ? "Another registration for this event already uses that mobile number."
+          : err.message || "Could not save the changes."
+      );
+      return;
+    }
+
+    setRows((rs) => rs.map((r) => (r.id === editing.id ? { ...r, ...patch } : r)));
+    setNotice(`Updated ${patch.full_name}.`);
+    setEditing(null);
+  };
+
+  const confirmDelete = async () => {
+    setBusy(true);
+    const { error: err } = await supabase
+      .from("event_registrations")
+      .delete()
+      .eq("id", deleting.id);
+    setBusy(false);
+
+    if (err) {
+      setError(err.message);
+      setDeleting(null);
+      return;
+    }
+    setRows((rs) => rs.filter((r) => r.id !== deleting.id));
+    setNotice(`Deleted ${deleting.full_name}.`);
+    setDeleting(null);
+  };
 
   const download = () => {
     const sheet = filtered.map((r) => ({
@@ -155,6 +245,11 @@ export default function AdminRegistrations() {
       {error && (
         <div className="mb-4">
           <Alert>{error}</Alert>
+        </div>
+      )}
+      {notice && (
+        <div className="mb-4">
+          <Alert kind="success">{notice}</Alert>
         </div>
       )}
 
@@ -237,7 +332,7 @@ export default function AdminRegistrations() {
           </Card>
 
           <Card>
-            <TableShell minWidth="min-w-[52rem]">
+            <TableShell minWidth="min-w-[62rem]">
               <thead>
                 <tr className={tableHeadRow}>
                   <th className={thCell}>Registered</th>
@@ -248,6 +343,7 @@ export default function AdminRegistrations() {
                   <th className={thCell}>Occupation</th>
                   <th className={thCell}>Education</th>
                   <th className={thCell}>Specialization</th>
+                  <th className={`${thCell} text-right`}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -276,11 +372,29 @@ export default function AdminRegistrations() {
                       </span>
                     </td>
                     <td className={tdCell}>{r.specialization}</td>
+                    <td className={`${tdCell} text-right`}>
+                      <div className="flex justify-end gap-1.5">
+                        <PortalButton
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEdit(r)}
+                        >
+                          Edit
+                        </PortalButton>
+                        <PortalButton
+                          variant="danger"
+                          size="sm"
+                          onClick={() => setDeleting(r)}
+                        >
+                          Delete
+                        </PortalButton>
+                      </div>
+                    </td>
                   </tr>
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-3 py-8 text-center text-sm text-textSoft">
+                    <td colSpan={9} className="px-3 py-8 text-center text-sm text-textSoft">
                       Nothing matches those filters.
                     </td>
                   </tr>
@@ -290,6 +404,171 @@ export default function AdminRegistrations() {
           </Card>
         </>
       )}
+
+      {/* ── Edit ── */}
+      <Modal
+        open={Boolean(editing)}
+        onClose={() => setEditing(null)}
+        title="Edit registration"
+      >
+        <form onSubmit={saveEdit} className="space-y-3">
+          <p className="rounded-lg bg-cream px-3 py-2 text-xs text-textSoft">
+            {editing?.event_name} · registered{" "}
+            {editing ? fmtDate(editing.created_at) : ""}
+          </p>
+
+          <Field label="Youth's full name">
+            <input
+              required
+              maxLength={120}
+              className={inputClass}
+              value={draft.full_name || ""}
+              onChange={(e) => setDraft({ ...draft, full_name: e.target.value })}
+            />
+          </Field>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="Mobile" hint="One registration per number, per event.">
+              <input
+                type="tel"
+                required
+                className={inputClass}
+                value={draft.mobile || ""}
+                onChange={(e) => setDraft({ ...draft, mobile: e.target.value })}
+              />
+            </Field>
+            <Field label="Whose reference?">
+              <input
+                required
+                maxLength={120}
+                className={inputClass}
+                value={draft.reference || ""}
+                onChange={(e) => setDraft({ ...draft, reference: e.target.value })}
+              />
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="Group">
+              <select
+                required
+                className={inputClass}
+                value={draft.group_name || ""}
+                onChange={(e) => setDraft({ ...draft, group_name: e.target.value })}
+              >
+                {GROUPS.map((g) => (
+                  <option key={g} value={g}>
+                    {g}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Occupation">
+              <select
+                required
+                className={inputClass}
+                value={draft.occupation || ""}
+                onChange={(e) => setDraft({ ...draft, occupation: e.target.value })}
+              >
+                {OCCUPATIONS.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="Education">
+              <select
+                required
+                className={inputClass}
+                value={draft.education || ""}
+                onChange={(e) => setDraft({ ...draft, education: e.target.value })}
+              >
+                {EDUCATION_LEVELS.map((l) => (
+                  <option key={l} value={l}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Education status">
+              <select
+                required
+                className={inputClass}
+                value={draft.education_status || ""}
+                onChange={(e) =>
+                  setDraft({ ...draft, education_status: e.target.value })
+                }
+              >
+                {EDUCATION_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+
+          <Field label="Specialization / domain / profession">
+            <input
+              required
+              maxLength={120}
+              className={inputClass}
+              value={draft.specialization || ""}
+              onChange={(e) =>
+                setDraft({ ...draft, specialization: e.target.value })
+              }
+            />
+          </Field>
+
+          {formError && <Alert>{formError}</Alert>}
+
+          <div className="flex justify-end gap-2 pt-1">
+            <PortalButton
+              type="button"
+              variant="outline"
+              onClick={() => setEditing(null)}
+            >
+              Cancel
+            </PortalButton>
+            <PortalButton type="submit" loading={saving}>
+              Save changes
+            </PortalButton>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── Delete ── */}
+      <Modal
+        open={Boolean(deleting)}
+        onClose={() => setDeleting(null)}
+        title="Delete registration?"
+        maxWidth="max-w-md"
+      >
+        <p className="text-sm text-textSoft">
+          This removes{" "}
+          <span className="font-semibold text-ink">{deleting?.full_name}</span> (
+          {deleting?.mobile}) from{" "}
+          <span className="font-semibold text-ink">{deleting?.event_name}</span>.
+          It can&apos;t be undone — but the number becomes free to register
+          again.
+        </p>
+        <div className="mt-5 flex justify-end gap-2">
+          <PortalButton
+            type="button"
+            variant="outline"
+            onClick={() => setDeleting(null)}
+          >
+            Cancel
+          </PortalButton>
+          <PortalButton variant="danger" loading={busy} onClick={confirmDelete}>
+            Delete
+          </PortalButton>
+        </div>
+      </Modal>
     </div>
   );
 }
