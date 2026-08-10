@@ -41,6 +41,8 @@ const fmtDate = (iso) =>
     minute: "2-digit",
   });
 
+const PER_PAGE = 15;
+
 // Only these columns are editable. event_slug is left out deliberately: it is
 // the de-duplication key, and moving a row between events could silently
 // collide with an existing registration there.
@@ -63,6 +65,7 @@ export default function AdminRegistrations() {
   const [event, setEvent] = useState("all");
   const [group, setGroup] = useState("all");
   const [q, setQ] = useState("");
+  const [page, setPage] = useState(1);
 
   const [editing, setEditing] = useState(null); // row being edited
   const [draft, setDraft] = useState({});
@@ -117,6 +120,23 @@ export default function AdminRegistrations() {
       );
     });
   }, [rows, event, group, q]);
+
+  // Narrowing the list should put you back at the start of it, not leave you on
+  // a page number that no longer means anything.
+  useEffect(() => {
+    setPage(1);
+  }, [event, group, q]);
+
+  /*
+   * The page number is clamped on read rather than stored clamped. Deleting the
+   * last row of the last page shrinks pageCount underneath us, and a stored
+   * page would then point past the end and render an empty table until the user
+   * worked out why. Deriving it means the view just falls back a page.
+   */
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const safePage = Math.min(page, pageCount);
+  const start = (safePage - 1) * PER_PAGE;
+  const visible = filtered.slice(start, start + PER_PAGE);
 
   // Counts per group for the filtered set — the number the team actually asks
   // for when planning prasad and seating.
@@ -357,7 +377,7 @@ export default function AdminRegistrations() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((r) => (
+                {visible.map((r) => (
                   <tr key={r.id} className="border-b border-sand/50 last:border-0">
                     <td className={`${tdCell} whitespace-nowrap text-xs text-textMuted`}>
                       {fmtDate(r.created_at)}
@@ -413,6 +433,44 @@ export default function AdminRegistrations() {
                 )}
               </tbody>
             </TableShell>
+
+            {/* Only worth showing once there is more than one page. Note the
+                Excel download stays tied to the full filtered set, not this
+                slice — exporting only the visible page would be a quiet way to
+                hand someone an incomplete list. */}
+            {filtered.length > PER_PAGE && (
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm text-textSoft">
+                  Showing{" "}
+                  <span className="font-semibold text-ink">
+                    {start + 1}–{Math.min(start + PER_PAGE, filtered.length)}
+                  </span>{" "}
+                  of {filtered.length}
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <PortalButton
+                    variant="outline"
+                    size="sm"
+                    disabled={safePage === 1}
+                    onClick={() => setPage(safePage - 1)}
+                  >
+                    ← Prev
+                  </PortalButton>
+                  <span className="px-1 text-sm text-textSoft">
+                    Page {safePage} of {pageCount}
+                  </span>
+                  <PortalButton
+                    variant="outline"
+                    size="sm"
+                    disabled={safePage === pageCount}
+                    onClick={() => setPage(safePage + 1)}
+                  >
+                    Next →
+                  </PortalButton>
+                </div>
+              </div>
+            )}
           </Card>
         </>
       )}
