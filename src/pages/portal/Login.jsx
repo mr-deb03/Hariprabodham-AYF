@@ -47,16 +47,26 @@ export default function Login() {
               autoComplete="email"
             />
           </Field>
-          <Field label="Password">
-            <input
-              type="password"
-              required
-              className={inputClass}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-            />
-          </Field>
+          <div>
+            <Field label="Password">
+              <input
+                type="password"
+                required
+                className={inputClass}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+              />
+            </Field>
+            <div className="mt-1.5 text-right">
+              <Link
+                to="/portal/forgot-password"
+                className="text-sm font-medium text-maroon hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+          </div>
           <Alert>{error}</Alert>
           <PortalButton type="submit" loading={busy} className="w-full">
             Sign in

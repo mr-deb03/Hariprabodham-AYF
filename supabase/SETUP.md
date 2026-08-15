@@ -156,6 +156,31 @@ curl "https://<PROJECT_REF>.supabase.co/functions/v1/instagram-feed?limit=3"
 select id, expires_at, updated_at from public.instagram_token;  -- never select the token
 ```
 
+## 7b. Forgot-password links (required, one setting)
+
+The login page has a **Forgot password?** link. It emails a one-time recovery
+link that must come back to `/portal/reset-password` — and Supabase refuses to
+redirect anywhere that isn't on its allow-list.
+
+**Authentication → URL Configuration:**
+- **Site URL** → `https://hpayf.org`
+- **Redirect URLs** → add `https://hpayf.org/portal/reset-password`
+  (and `http://localhost:3000/portal/reset-password` for local development)
+
+Without this the emailed link opens the home page instead of the reset form, and
+nobody can complete a reset.
+
+Two things worth knowing:
+- Links are single-use and expire after about an hour. A second click shows
+  "Link expired" with a button to request a new one.
+- The confirmation reads the same whether or not that email has an account. That
+  is deliberate — a "no such account" message would let anyone use the form to
+  discover which addresses are registered karyakartas.
+
+Nobody can look up an existing password, including you — they are stored only as
+bcrypt hashes. Recovery is the only route. Admins can still do it manually at
+**Authentication → Users → ⋯ → Send password recovery**.
+
 ## 8. Event registrations (home-page banner)
 
 Run `supabase/event_registrations.sql` (§2 step 3). Nothing else to configure —

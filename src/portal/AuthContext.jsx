@@ -87,6 +87,22 @@ export function AuthProvider({ children }) {
 
   const signOut = () => supabase.auth.signOut();
 
+  /*
+   * Emails a one-time recovery link. redirectTo must also be listed under
+   * Authentication -> URL Configuration -> Redirect URLs in the Supabase
+   * dashboard, or the link lands on the site with an "invalid redirect" error
+   * instead of a session. Derived from window.location.origin so localhost and
+   * production each send people back to themselves.
+   */
+  const sendPasswordReset = (email) =>
+    supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/portal/reset-password`,
+    });
+
+  // Only works while a session exists. Following the emailed link creates a
+  // temporary recovery session, which is what authorises this call.
+  const updatePassword = (password) => supabase.auth.updateUser({ password });
+
   const refreshProfile = () => loadProfile(session?.user?.id, { silent: true });
 
   const value = {
@@ -99,6 +115,8 @@ export function AuthProvider({ children }) {
     signUp,
     signIn,
     signOut,
+    sendPasswordReset,
+    updatePassword,
     refreshProfile,
   };
 

@@ -19,6 +19,8 @@ const PortalLayout = lazy(() => import("./portal/PortalLayout"));
 const PortalLogin = lazy(() => import("./pages/portal/Login"));
 const PortalRegister = lazy(() => import("./pages/portal/Register"));
 const PortalPending = lazy(() => import("./pages/portal/Pending"));
+const PortalForgotPassword = lazy(() => import("./pages/portal/ForgotPassword"));
+const PortalResetPassword = lazy(() => import("./pages/portal/ResetPassword"));
 const PortalDashboard = lazy(() => import("./pages/portal/Dashboard"));
 const PortalProfile = lazy(() => import("./pages/portal/Profile"));
 const PortalAdminApprovals = lazy(() => import("./pages/portal/AdminApprovals"));
@@ -50,6 +52,12 @@ function App() {
           <Route path="login" element={<PortalLogin />} />
           <Route path="register" element={<PortalRegister />} />
           <Route path="pending" element={<PortalPending />} />
+          {/* Both must stay outside RequireAuth. Someone recovering a password
+              is by definition unable to sign in, and the reset link arrives
+              with only a temporary recovery session — not an approved profile,
+              which is what the guard checks for. */}
+          <Route path="forgot-password" element={<PortalForgotPassword />} />
+          <Route path="reset-password" element={<PortalResetPassword />} />
 
           {/* Protected routes */}
           <Route
