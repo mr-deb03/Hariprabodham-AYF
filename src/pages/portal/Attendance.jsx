@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase, fetchAllRows } from "../../lib/supabaseClient";
 import { useAuth } from "../../portal/AuthContext";
 import {
@@ -22,6 +22,13 @@ import {
 
 const PAGE_SIZE = 20;
 
+// Long enough that ticking down a roster is one write rather than forty, short
+// enough that nobody wonders whether it saved.
+const AUTOSAVE_MS = 1200;
+
+const clockOf = (d) =>
+  d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+
 export default function Attendance() {
   const { user, profile } = useAuth();
   const isAdmin = profile?.role === "admin";
@@ -39,8 +46,27 @@ export default function Attendance() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState({ kind: "", text: "" });
+
+  /*
+   * Autosave.
+   *
+   * `revision` is bumped only by a human action, never by loading a roster —
+   * otherwise opening a sheet would immediately write it straight back.
+   *
+   * pendingRef holds a SNAPSHOT of what needs writing (date, mandal, members,
+   * present) rather than reading current state at write time. Two things depend
+   * on that: a debounced write that fires after the user has switched mandal
+   * still lands on the sheet it was made for, and a write in flight can't be
+   * corrupted by edits arriving mid-request.
+   */
+  const [revision, setRevision] = useState(0);
+  const [status, setStatus] = useState({ state: "idle", text: "" });
+  const pendingRef = useRef(null);
+  const savingRef = useRef(false);
+  const flushRef = useRef(() => {});
+
+  const bump = () => setRevision((r) => r + 1);
 
   // Pick a sensible default mandal: one that meets on the selected day and that
   // the user is allowed to mark; otherwise the first markable one.
@@ -59,6 +85,10 @@ export default function Attendance() {
     }
     setLoading(true);
     setMsg({ kind: "", text: "" });
+    // A freshly loaded sheet is by definition already saved. Resetting the
+    // revision stops the autosave effect writing it straight back out.
+    setRevision(0);
+    setStatus({ state: "idle", text: "" });
 
     // Roster for this mandal — every member in the sheet (active and inactive),
     // ordered by AYG code so members run in sequence (HK0101, HK0102 … then
@@ -107,58 +137,125 @@ export default function Attendance() {
     setPage(1);
   }, [search, mandal, date]);
 
-  const toggle = (id) =>
+  const toggle = (id) => {
     setPresent((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-
-  const allPresent = () => setPresent(new Set(members.map((m) => m.id)));
-  const clearAll = () => setPresent(new Set());
-
-  const save = async () => {
-    setSaving(true);
-    setMsg({ kind: "", text: "" });
-
-    // 1) Upsert the session, get its id
-    const { data: sess, error: sErr } = await supabase
-      .from("attendance_sessions")
-      .upsert(
-        { session_date: date, mandal, created_by: user.id },
-        { onConflict: "session_date,mandal" }
-      )
-      .select("id")
-      .single();
-    if (sErr) {
-      setMsg({ kind: "error", text: sErr.message });
-      setSaving(false);
-      return;
-    }
-
-    // 2) Upsert a record per member
-    const now = new Date().toISOString();
-    const rows = members.map((m) => ({
-      session_id: sess.id,
-      member_id: m.id,
-      present: present.has(m.id),
-      marked_by: user.id,
-      marked_at: now,
-    }));
-    const { error: rErr } = await supabase
-      .from("attendance_records")
-      .upsert(rows, { onConflict: "session_id,member_id" });
-    setSaving(false);
-    if (rErr) {
-      setMsg({ kind: "error", text: rErr.message });
-      return;
-    }
-    setMsg({
-      kind: "success",
-      text: `Saved — ${present.size} present, ${members.length - present.size} absent.`,
-    });
+    bump();
   };
+
+  const allPresent = () => {
+    setPresent(new Set(members.map((m) => m.id)));
+    bump();
+  };
+  const clearAll = () => {
+    setPresent(new Set());
+    bump();
+  };
+
+  // The actual write. Takes everything it needs as an argument so it can never
+  // write current state to a snapshot's session, or vice versa.
+  const writeSnapshot = useCallback(
+    async (snap) => {
+      const { data: sess, error: sErr } = await supabase
+        .from("attendance_sessions")
+        .upsert(
+          { session_date: snap.date, mandal: snap.mandal, created_by: user.id },
+          { onConflict: "session_date,mandal" }
+        )
+        .select("id")
+        .single();
+      if (sErr) return sErr;
+
+      const now = new Date().toISOString();
+      const rows = snap.members.map((m) => ({
+        session_id: sess.id,
+        member_id: m.id,
+        present: snap.present.has(m.id),
+        marked_by: user.id,
+        marked_at: now,
+      }));
+      const { error: rErr } = await supabase
+        .from("attendance_records")
+        .upsert(rows, { onConflict: "session_id,member_id" });
+      return rErr || null;
+    },
+    [user]
+  );
+
+  /*
+   * Drains pendingRef. Only ever one write in flight: anything that arrives
+   * while one is running replaces the pending snapshot and is picked up by the
+   * tail call below, so ticks can never be applied out of order.
+   *
+   * A failed write puts its snapshot back so the next attempt — automatic or
+   * via Retry — still carries the marks. Losing a roster because the wifi
+   * dropped for a second is the one outcome worth engineering against here.
+   */
+  const flush = useCallback(async () => {
+    if (savingRef.current) return;
+    const snap = pendingRef.current;
+    if (!snap) return;
+
+    pendingRef.current = null;
+    savingRef.current = true;
+    setStatus({ state: "saving", text: "" });
+
+    const err = await writeSnapshot(snap);
+    savingRef.current = false;
+
+    if (err) {
+      // Don't clobber a newer edit that landed while this was failing.
+      if (!pendingRef.current) pendingRef.current = snap;
+      setStatus({ state: "error", text: err.message || "Could not save." });
+      return;
+    }
+    if (pendingRef.current) {
+      flushRef.current();
+      return;
+    }
+    setStatus({
+      state: "saved",
+      text: `${snap.present.size} present · ${snap.members.length - snap.present.size} absent · ${clockOf(new Date())}`,
+    });
+  }, [writeSnapshot]);
+
+  flushRef.current = flush;
+
+  // Debounce. Deps are [revision] on purpose: the effect closes over the state
+  // as it was when a human last changed something, which is exactly the
+  // snapshot we want to persist.
+  useEffect(() => {
+    if (revision === 0) return undefined;
+    pendingRef.current = { date, mandal, members, present: new Set(present) };
+    setStatus({ state: "unsaved", text: "" });
+    const id = setTimeout(() => flushRef.current(), AUTOSAVE_MS);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revision]);
+
+  // Switching date or mandal tears down the debounce above before it fires.
+  // Write whatever was pending first — the snapshot carries its own date and
+  // mandal, so it lands on the sheet it belongs to, not the one just opened.
+  useEffect(() => {
+    return () => {
+      if (pendingRef.current) flushRef.current();
+    };
+  }, [date, mandal]);
+
+  // Closing the tab mid-roster shouldn't silently drop the last few marks.
+  useEffect(() => {
+    const onLeave = (e) => {
+      if (!pendingRef.current && !savingRef.current) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onLeave);
+    return () => window.removeEventListener("beforeunload", onLeave);
+  }, []);
 
   const q = search.trim().toLowerCase();
   const filtered = members.filter(
@@ -357,10 +454,59 @@ export default function Attendance() {
                 </div>
               )}
 
-              <div className="mt-5">
-                <PortalButton onClick={save} loading={saving}>
-                  Save attendance
-                </PortalButton>
+              {/* Autosave status. A failed write keeps its marks and offers a
+                  retry rather than pretending nothing happened — this is the
+                  one screen where silently losing input costs a re-count of
+                  the whole sabha. */}
+              <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-sand/60 pt-4">
+                {status.state === "saving" && (
+                  <span className="flex items-center gap-2 text-sm text-textSoft">
+                    <Spinner className="h-4 w-4" />
+                    Saving…
+                  </span>
+                )}
+
+                {status.state === "unsaved" && (
+                  <span className="text-sm text-textMuted">Unsaved changes…</span>
+                )}
+
+                {status.state === "saved" && (
+                  <span className="text-sm font-medium text-green-700">
+                    ✓ Saved · {status.text}
+                  </span>
+                )}
+
+                {status.state === "idle" && (
+                  <span className="text-sm text-textMuted">
+                    Changes save automatically.
+                  </span>
+                )}
+
+                {status.state === "error" && (
+                  <>
+                    <span className="text-sm font-medium text-red-700">
+                      Not saved — {status.text}
+                    </span>
+                    <PortalButton
+                      variant="danger"
+                      size="sm"
+                      onClick={() => flushRef.current()}
+                    >
+                      Retry
+                    </PortalButton>
+                  </>
+                )}
+
+                {(status.state === "unsaved" || status.state === "idle") && (
+                  <PortalButton
+                    variant="outline"
+                    size="sm"
+                    disabled={status.state === "idle"}
+                    onClick={() => flushRef.current()}
+                  >
+                    Save now
+                  </PortalButton>
+                )}
               </div>
             </>
           )}
