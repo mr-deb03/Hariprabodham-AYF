@@ -1,6 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 import { supabase, fetchAllRows } from "../../lib/supabaseClient";
+import {
+  pushToSheet,
+  reportRowFromNames,
+  saveReportRows,
+  sheetConfigured,
+} from "../../lib/attendanceReport";
 import { useAuth } from "../../portal/AuthContext";
 import {
   MANDAL_CODES,
@@ -17,8 +23,6 @@ import {
   Spinner,
   inputClass,
 } from "../../portal/ui";
-
-const SHEET_WEBHOOK = process.env.REACT_APP_REPORT_SHEET_WEBHOOK;
 
 export default function Report() {
   const { profile, user } = useAuth();
@@ -162,7 +166,14 @@ export default function Report() {
     }
   };
 
-  // --- Save (finalize) an immutable snapshot + optional Google Sheet export ---
+  /*
+   * Re-finalize this date on demand.
+   *
+   * Marking attendance now writes the day's snapshot by itself, so this is no
+   * longer the only way a report gets saved — it's the manual override: it
+   * rebuilds the snapshot from what's on screen and pushes the day to the
+   * Google Sheet, which is useful after a roster edit or a correction.
+   */
   const save = async () => {
     if (!taken.length) {
       setMsg({ kind: "error", text: "Nothing to save — no attendance taken for this date yet." });
@@ -171,59 +182,30 @@ export default function Report() {
     setSaving(true);
     setMsg({ kind: "", text: "" });
 
-    const snapshot = taken.map((r) => ({
-      report_date: date,
-      mandal: r.mandal,
-      total: r.total,
-      present_count: r.present.length,
-      absent_count: r.absent.length,
-      present_names: r.present,
-      absent_names: r.absent,
-      finalized_by: user?.id || null,
-      finalized_at: new Date().toISOString(),
-    }));
+    const snapshot = taken.map((r) =>
+      reportRowFromNames({
+        date,
+        mandal: r.mandal,
+        present: r.present,
+        absent: r.absent,
+        userId: user?.id,
+      })
+    );
 
-    const { error } = await supabase
-      .from("attendance_reports")
-      .upsert(snapshot, { onConflict: "report_date,mandal" });
+    const error = await saveReportRows(snapshot);
     if (error) {
       setSaving(false);
       setMsg({ kind: "error", text: error.message });
       return;
     }
 
-    // Best-effort append to the Google Sheet (fire-and-forget; no-cors).
-    if (SHEET_WEBHOOK) {
-      try {
-        await fetch(SHEET_WEBHOOK, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({
-            date,
-            day: dayNameOf(date),
-            savedBy: profile?.full_name || "",
-            rows: taken.map((r) => ({
-              mandal: r.mandal,
-              mandalName: MANDAL_BY_CODE[r.mandal]?.name,
-              present: r.present.length,
-              absent: r.absent.length,
-              total: r.total,
-              presentNames: r.present,
-              absentNames: r.absent,
-            })),
-          }),
-        });
-      } catch {
-        /* sheet export is best-effort */
-      }
-    }
+    await pushToSheet({ date, savedBy: profile?.full_name || "", rows: snapshot });
 
     setSaving(false);
     setSavedAt(new Date().toISOString());
     setMsg({
       kind: "success",
-      text: `Report saved for ${taken.length} mandal(s)${SHEET_WEBHOOK ? " and sent to the Google Sheet" : ""}.`,
+      text: `Report saved for ${taken.length} mandal(s)${sheetConfigured ? " and sent to the Google Sheet" : ""}.`,
     });
     loadHistory();
   };

@@ -1,5 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase, fetchAllRows } from "../../lib/supabaseClient";
+import {
+  pushToSheet,
+  reportRow,
+  saveReportRows,
+} from "../../lib/attendanceReport";
 import { useAuth } from "../../portal/AuthContext";
 import {
   MANDAL_CODES,
@@ -25,6 +30,12 @@ const PAGE_SIZE = 20;
 // Long enough that ticking down a roster is one write rather than forty, short
 // enough that nobody wonders whether it saved.
 const AUTOSAVE_MS = 1200;
+
+// The report snapshot is written on every save — it's one cheap idempotent
+// upsert. The Google Sheet is not: the Apps Script keys rows by date+mandal but
+// still costs a round trip, so it waits for the roster to stop changing. A
+// normal sabha is one push; leaving the page sends whatever is still owed.
+const SHEET_SETTLE_MS = 20000;
 
 const clockOf = (d) =>
   d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
@@ -62,11 +73,24 @@ const dropDraft = (snap) => {
   }
 };
 
+// A snapshot's roster. Drafts written before the report auto-finalised carried
+// bare ids; those still write their marks correctly, they just can't produce a
+// report row, so finalising is skipped for them rather than inventing names.
+const rosterOf = (snap) =>
+  Array.isArray(snap.members) ? snap.members : null;
+
+const idsOf = (snap) =>
+  rosterOf(snap)?.map((m) => m.id) ?? snap.memberIds ?? [];
+
+const isDraft = (snap) =>
+  Boolean(snap?.date && snap?.mandal) &&
+  (Array.isArray(snap.members) || Array.isArray(snap.memberIds));
+
 const readDraft = (date, mandal) => {
   try {
     const raw = localStorage.getItem(draftKey(date, mandal));
     const snap = raw ? JSON.parse(raw) : null;
-    return Array.isArray(snap?.memberIds) ? snap : null;
+    return isDraft(snap) ? snap : null;
   } catch {
     return null;
   }
@@ -79,7 +103,7 @@ const readAllDrafts = () => {
       const k = localStorage.key(i);
       if (!k || !k.startsWith(DRAFT_PREFIX)) continue;
       const snap = JSON.parse(localStorage.getItem(k));
-      if (snap?.date && snap?.mandal && Array.isArray(snap.memberIds)) out.push(snap);
+      if (isDraft(snap)) out.push(snap);
     }
   } catch {
     /* see above */
@@ -245,7 +269,7 @@ export default function Attendance() {
 
       const now = new Date().toISOString();
       const presentIds = new Set(snap.presentIds);
-      const rows = snap.memberIds.map((id) => ({
+      const rows = idsOf(snap).map((id) => ({
         session_id: sess.id,
         member_id: id,
         present: presentIds.has(id),
@@ -259,6 +283,71 @@ export default function Attendance() {
     },
     [user]
   );
+
+  /*
+   * Finalising used to be a button on the Report page, which meant a sabha
+   * could be fully marked and still be absent from the saved-reports list —
+   * marks and reports live in different tables. Now every successful save
+   * writes the day's snapshot too, so "attendance marked" implies "report
+   * saved" without anyone remembering to press anything.
+   *
+   * The Sheet mirror is queued rather than sent: see SHEET_SETTLE_MS.
+   */
+  const sheetOwedRef = useRef(new Map());
+  const sheetTimerRef = useRef(null);
+  const pushSheetRef = useRef(() => {});
+
+  const finalize = useCallback(
+    async (snap) => {
+      const roster = rosterOf(snap);
+      if (!roster) return;
+
+      const row = reportRow({
+        date: snap.date,
+        mandal: snap.mandal,
+        members: roster,
+        presentIds: snap.presentIds,
+        userId: user?.id,
+      });
+      // A failed snapshot isn't worth interrupting the taker for — the marks
+      // themselves are already safe, and the next save re-finalises anyway.
+      const err = await saveReportRows([row]);
+      if (err) return;
+
+      sheetOwedRef.current.set(`${snap.date}.${snap.mandal}`, row);
+      if (sheetTimerRef.current) clearTimeout(sheetTimerRef.current);
+      sheetTimerRef.current = setTimeout(
+        () => pushSheetRef.current(),
+        SHEET_SETTLE_MS
+      );
+    },
+    [user]
+  );
+
+  // Send every owed row, grouped by date because the webhook takes one day at
+  // a time. Called on the settle timer, and whenever the page is going away.
+  const pushSheet = useCallback(async () => {
+    if (sheetTimerRef.current) {
+      clearTimeout(sheetTimerRef.current);
+      sheetTimerRef.current = null;
+    }
+    const owed = [...sheetOwedRef.current.values()];
+    if (owed.length === 0) return;
+    sheetOwedRef.current.clear();
+
+    const byDate = new Map();
+    owed.forEach((row) => {
+      const list = byDate.get(row.report_date) || [];
+      list.push(row);
+      byDate.set(row.report_date, list);
+    });
+    for (const [date_, rows] of byDate) {
+      // eslint-disable-next-line no-await-in-loop
+      await pushToSheet({ date: date_, savedBy: profile?.full_name || "", rows });
+    }
+  }, [profile]);
+
+  pushSheetRef.current = pushSheet;
 
   /*
    * Drains pendingRef. Only ever one write in flight: anything that arrives
@@ -294,11 +383,15 @@ export default function Attendance() {
       flushRef.current();
       return;
     }
+
+    // Nothing further queued, so this is the roster as it stands: finalise it.
+    finalize(snap);
+
     setStatus({
       state: "saved",
-      text: `${snap.presentIds.length} present · ${snap.memberIds.length - snap.presentIds.length} absent · ${clockOf(new Date())}`,
+      text: `${snap.presentIds.length} present · ${idsOf(snap).length - snap.presentIds.length} absent · ${clockOf(new Date())}`,
     });
-  }, [writeSnapshot]);
+  }, [writeSnapshot, finalize]);
 
   flushRef.current = flush;
 
@@ -310,7 +403,9 @@ export default function Attendance() {
     const snap = {
       date,
       mandal,
-      memberIds: members.map((m) => m.id),
+      // name and active ride along so the write can finalise the day's report
+      // without re-fetching the roster.
+      members: members.map((m) => ({ id: m.id, name: m.name, active: m.active })),
       presentIds: [...present],
     };
     pendingRef.current = snap;
@@ -332,6 +427,12 @@ export default function Attendance() {
     };
   }, [date, mandal]);
 
+  // Leaving the page for good — send whatever the Sheet is still owed rather
+  // than letting the settle timer die with the component.
+  useEffect(() => {
+    return () => pushSheetRef.current();
+  }, []);
+
   /*
    * The page going away mid-roster shouldn't drop the last few marks.
    *
@@ -344,9 +445,14 @@ export default function Attendance() {
    */
   useEffect(() => {
     const onHidden = () => {
-      if (document.visibilityState === "hidden") flushRef.current();
+      if (document.visibilityState !== "hidden") return;
+      flushRef.current();
+      pushSheetRef.current();
     };
-    const onPageHide = () => flushRef.current();
+    const onPageHide = () => {
+      flushRef.current();
+      pushSheetRef.current();
+    };
     const onLeave = (e) => {
       if (!pendingRef.current && !savingRef.current) return;
       e.preventDefault();
@@ -388,6 +494,8 @@ export default function Attendance() {
         const err = await writeSnapshot(snap);
         if (err) continue;
         dropDraft(snap);
+        // eslint-disable-next-line no-await-in-loop
+        await finalize(snap);
         done.push(snap);
       }
       if (done.length === 0) return;
@@ -398,7 +506,7 @@ export default function Attendance() {
           .join(", ")}.`,
       });
     })();
-  }, [user, markable, writeSnapshot]);
+  }, [user, markable, writeSnapshot, finalize]);
 
   const q = search.trim().toLowerCase();
   const filtered = members.filter(
