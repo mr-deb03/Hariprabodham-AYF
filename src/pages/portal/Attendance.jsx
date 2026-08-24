@@ -29,6 +29,64 @@ const AUTOSAVE_MS = 1200;
 const clockOf = (d) =>
   d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
 
+/*
+ * Draft storage.
+ *
+ * Marks are written to localStorage the instant they are ticked, and removed
+ * only once a write carrying them has succeeded. This is the difference
+ * between "the sabha was counted" and "the sabha was counted and we still have
+ * it": a taker's phone being locked, backgrounded or the tab discarded mid-roster
+ * is the ordinary end of a sabha, not an edge case, and none of those reliably
+ * run any teardown we could hook. A draft that outlives the tab is re-sent the
+ * next time the page opens.
+ *
+ * Snapshots are kept JSON-serialisable (id arrays, not member objects and Sets)
+ * so the same shape goes to localStorage and to writeSnapshot.
+ */
+const DRAFT_PREFIX = "hp.attendance.draft.";
+const draftKey = (date, mandal) => `${DRAFT_PREFIX}${date}.${mandal}`;
+
+const writeDraft = (snap) => {
+  try {
+    localStorage.setItem(draftKey(snap.date, snap.mandal), JSON.stringify(snap));
+  } catch {
+    /* private mode or quota — drafts are a safety net, never a dependency */
+  }
+};
+
+const dropDraft = (snap) => {
+  try {
+    localStorage.removeItem(draftKey(snap.date, snap.mandal));
+  } catch {
+    /* see above */
+  }
+};
+
+const readDraft = (date, mandal) => {
+  try {
+    const raw = localStorage.getItem(draftKey(date, mandal));
+    const snap = raw ? JSON.parse(raw) : null;
+    return Array.isArray(snap?.memberIds) ? snap : null;
+  } catch {
+    return null;
+  }
+};
+
+const readAllDrafts = () => {
+  const out = [];
+  try {
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const k = localStorage.key(i);
+      if (!k || !k.startsWith(DRAFT_PREFIX)) continue;
+      const snap = JSON.parse(localStorage.getItem(k));
+      if (snap?.date && snap?.mandal && Array.isArray(snap.memberIds)) out.push(snap);
+    }
+  } catch {
+    /* see above */
+  }
+  return out;
+};
+
 export default function Attendance() {
   const { user, profile } = useAuth();
   const isAdmin = profile?.role === "admin";
@@ -125,6 +183,21 @@ export default function Attendance() {
     } else {
       setPresent(new Set());
     }
+
+    // A draft still on disk for this sheet means its marks never reached the
+    // server. It is newer than anything we just read, so it wins — and bumping
+    // the revision hands it straight to the autosave effect, which writes it
+    // out and clears the draft.
+    const draft = readDraft(date, mandal);
+    if (draft) {
+      setPresent(new Set(draft.presentIds));
+      setMsg({
+        kind: "info",
+        text: "Restored marks from this device that hadn't reached the server yet — saving them now.",
+      });
+      setRevision((r) => r + 1);
+    }
+
     setLoading(false);
   }, [date, mandal]);
 
@@ -171,10 +244,11 @@ export default function Attendance() {
       if (sErr) return sErr;
 
       const now = new Date().toISOString();
-      const rows = snap.members.map((m) => ({
+      const presentIds = new Set(snap.presentIds);
+      const rows = snap.memberIds.map((id) => ({
         session_id: sess.id,
-        member_id: m.id,
-        present: snap.present.has(m.id),
+        member_id: id,
+        present: presentIds.has(id),
         marked_by: user.id,
         marked_at: now,
       }));
@@ -213,13 +287,16 @@ export default function Attendance() {
       setStatus({ state: "error", text: err.message || "Could not save." });
       return;
     }
+    // Safely on the server — the draft has done its job.
+    dropDraft(snap);
+
     if (pendingRef.current) {
       flushRef.current();
       return;
     }
     setStatus({
       state: "saved",
-      text: `${snap.present.size} present · ${snap.members.length - snap.present.size} absent · ${clockOf(new Date())}`,
+      text: `${snap.presentIds.length} present · ${snap.memberIds.length - snap.presentIds.length} absent · ${clockOf(new Date())}`,
     });
   }, [writeSnapshot]);
 
@@ -230,7 +307,16 @@ export default function Attendance() {
   // snapshot we want to persist.
   useEffect(() => {
     if (revision === 0) return undefined;
-    pendingRef.current = { date, mandal, members, present: new Set(present) };
+    const snap = {
+      date,
+      mandal,
+      memberIds: members.map((m) => m.id),
+      presentIds: [...present],
+    };
+    pendingRef.current = snap;
+    // To disk before the timer, not after the write. The window this closes is
+    // exactly the one where marks used to vanish: ticked, but not yet sent.
+    writeDraft(snap);
     setStatus({ state: "unsaved", text: "" });
     const id = setTimeout(() => flushRef.current(), AUTOSAVE_MS);
     return () => clearTimeout(id);
@@ -246,16 +332,73 @@ export default function Attendance() {
     };
   }, [date, mandal]);
 
-  // Closing the tab mid-roster shouldn't silently drop the last few marks.
+  /*
+   * The page going away mid-roster shouldn't drop the last few marks.
+   *
+   * `beforeunload` only ever warns, and on a phone it mostly doesn't fire at
+   * all — locking the screen, switching apps, or the tab being discarded skip
+   * it, and the pending debounce timer gets frozen with them. visibilitychange
+   * and pagehide DO fire there, so they get the flush; beforeunload stays as a
+   * desktop-only second line of defence. Should even this miss, the marks are
+   * already on disk and the recovery pass below re-sends them.
+   */
   useEffect(() => {
+    const onHidden = () => {
+      if (document.visibilityState === "hidden") flushRef.current();
+    };
+    const onPageHide = () => flushRef.current();
     const onLeave = (e) => {
       if (!pendingRef.current && !savingRef.current) return;
       e.preventDefault();
       e.returnValue = "";
     };
+    document.addEventListener("visibilitychange", onHidden);
+    window.addEventListener("pagehide", onPageHide);
     window.addEventListener("beforeunload", onLeave);
-    return () => window.removeEventListener("beforeunload", onLeave);
+    return () => {
+      document.removeEventListener("visibilitychange", onHidden);
+      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("beforeunload", onLeave);
+    };
   }, []);
+
+  /*
+   * Recovery. Any draft still on disk is a sheet whose marks never reached the
+   * server, from this session or a previous one. Re-send them once per mount —
+   * a taker whose phone died mid-sabha gets their count back by doing nothing
+   * more than opening this page.
+   *
+   * Drafts for mandals this person can no longer mark are left alone rather
+   * than thrown at RLS; the sheet's own tab will pick them up if it opens.
+   */
+  const recoveredRef = useRef(false);
+  useEffect(() => {
+    if (recoveredRef.current || !user || markable.length === 0) return;
+    recoveredRef.current = true;
+
+    const stale = readAllDrafts().filter((s) => markable.includes(s.mandal));
+    if (stale.length === 0) return;
+
+    (async () => {
+      const done = [];
+      for (const snap of stale) {
+        // Sequential on purpose: these share the one-write-in-flight discipline
+        // the rest of the page keeps, and a stranded sheet is never urgent.
+        // eslint-disable-next-line no-await-in-loop
+        const err = await writeSnapshot(snap);
+        if (err) continue;
+        dropDraft(snap);
+        done.push(snap);
+      }
+      if (done.length === 0) return;
+      setMsg({
+        kind: "success",
+        text: `Recovered unsaved attendance for ${done
+          .map((d) => `${mandalShort(d.mandal)} (${d.date})`)
+          .join(", ")}.`,
+      });
+    })();
+  }, [user, markable, writeSnapshot]);
 
   const q = search.trim().toLowerCase();
   const filtered = members.filter(
