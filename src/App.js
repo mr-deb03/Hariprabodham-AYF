@@ -2,12 +2,14 @@ import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
+import { GANESH_UTSAV_PATH } from "./data/ganeshUtsav2026";
 
 // Code-split the secondary pages so the landing page ships less JS upfront.
 const About = lazy(() => import("./pages/About"));
 const Parampara = lazy(() => import("./pages/Parampara"));
 const EventsPage = lazy(() => import("./pages/Events"));
 const EventDetail = lazy(() => import("./pages/EventDetail"));
+const GaneshUtsav2026 = lazy(() => import("./pages/GaneshUtsav2026"));
 const Media = lazy(() => import("./pages/Media"));
 const Smruti = lazy(() => import("./pages/Smruti"));
 const Contact = lazy(() => import("./pages/Contact"));
@@ -41,6 +43,9 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/parampara" element={<Parampara />} />
           <Route path="/events" element={<EventsPage />} />
+          {/* A fixed segment outranks :slug, so this is never mistaken for a
+              gallery, whichever order the two are listed in. */}
+          <Route path={GANESH_UTSAV_PATH} element={<GaneshUtsav2026 />} />
           <Route path="/events/:slug" element={<EventDetail />} />
           <Route path="/media" element={<Media />} />
           <Route path="/smruti" element={<Smruti />} />

@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import ScrollManager from "./ScrollManager";
+import EventPromoPopup from "./EventPromoPopup";
 
 /* Shared chrome for every route: scroll handling, navbar, page, footer. */
 export default function Layout() {
@@ -22,6 +23,9 @@ export default function Layout() {
         </Suspense>
       </main>
       <Footer />
+      {/* Public site only. The portal has its own layout, so karyakartas
+          marking attendance never get a promotional popup over their work. */}
+      <EventPromoPopup />
     </>
   );
 }

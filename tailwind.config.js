@@ -4,10 +4,14 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ['"Cormorant Garamond"', "Georgia", "serif"],
-        serif: ['"Cormorant Garamond"', "Georgia", "serif"],
+        // The Noto Devanagari faces only ever supply Hindi glyphs: Latin text
+        // matches Cormorant/Inter first. See the note on the font link in
+        // public/index.html.
+        display: ['"Cormorant Garamond"', '"Noto Serif Devanagari"', "Georgia", "serif"],
+        serif: ['"Cormorant Garamond"', '"Noto Serif Devanagari"', "Georgia", "serif"],
         sans: [
           "Inter",
+          '"Noto Sans Devanagari"',
           "system-ui",
           "-apple-system",
           "Segoe UI",

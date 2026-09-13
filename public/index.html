@@ -44,11 +44,18 @@
       content="HariPrabodham Atmiya Youth Foundation, Bhandup — a spiritual family devoted to seva, smruti and atmiyata, nurturing youth, families and communities through faith and selfless service."
     />
 
-    <!-- Premium spiritual typography -->
+    <!--
+      Premium spiritual typography.
+
+      The two Noto Devanagari families exist for Hindi content (the Ganesh
+      Utsav page). They sit behind Cormorant/Inter in every font stack, and
+      Google Fonts serves them under a unicode-range, so a page with no
+      Devanagari on it never downloads them.
+    -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />

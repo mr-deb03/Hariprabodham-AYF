@@ -49,8 +49,8 @@
   body {
     margin: 0;
     overflow-x: hidden;
-    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
-      "Helvetica Neue", Arial, sans-serif;
+    font-family: "Inter", "Noto Sans Devanagari", system-ui, -apple-system,
+      "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     font-size: 16px;
     line-height: 1.75;
     color: var(--ink);
@@ -66,10 +66,18 @@
   h4,
   h5,
   h6 {
-    font-family: "Cormorant Garamond", Georgia, serif;
+    font-family: "Cormorant Garamond", "Noto Serif Devanagari", Georgia, serif;
     color: var(--maroon);
     font-weight: 600;
     line-height: 1.15;
+  }
+
+  /* Devanagari carries marks above its headline stroke and below the
+     baseline, and at the tight Latin leading they collide across wrapped
+     lines. :where() holds this at element specificity, so a leading-* utility
+     still wins where one is set. */
+  :where([lang="hi"]) :is(h1, h2, h3, h4, h5, h6) {
+    line-height: 1.4;
   }
 
   ::selection {
@@ -100,7 +108,7 @@
 @layer components {
   /* Small uppercase accent label above headings */
   .eyebrow {
-    font-family: "Inter", system-ui, sans-serif;
+    font-family: "Inter", "Noto Sans Devanagari", system-ui, sans-serif;
     font-size: 0.875rem;
     line-height: 1.5;
     font-weight: 600;
@@ -118,7 +126,7 @@
     gap: 0.5rem;
     border-radius: 14px;
     padding: 0.875rem 1.75rem;
-    font-family: "Inter", system-ui, sans-serif;
+    font-family: "Inter", "Noto Sans Devanagari", system-ui, sans-serif;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
