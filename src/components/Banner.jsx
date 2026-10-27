@@ -7,24 +7,22 @@ import forest from "../assets/home/forest.jpeg";
 /*
  * Featured event on the home page.
  *
- * Month is 0-indexed in the Date constructor, so 8 is September. The countdown
- * targets the first morning session; EVENT_END is the close of the second
- * evening session, after which the banner stops advertising a countdown.
+ * Month is 0-indexed in the Date constructor, so 10 is November. The countdown
+ * targets the 6 PM start. The schedule is "6 PM onwards" with no set close, so
+ * EVENT_END is a 10 PM cut-off, after which the banner stops showing
+ * "Happening now".
  */
-const EVENT_START = new Date(2026, 8, 5, 8, 0, 0); // Sat 5 Sep 2026, 08:00
-const EVENT_END = new Date(2026, 8, 6, 22, 0, 0); //  Sun 6 Sep 2026, 22:00
+const EVENT_START = new Date(2026, 10, 6, 18, 0, 0); // Fri 6 Nov 2026, 18:00
+const EVENT_END = new Date(2026, 10, 6, 22, 0, 0); //   Fri 6 Nov 2026, 22:00
 
-const DATE_LABEL = "5 & 6 September 2026";
-const SESSIONS = [
-  { name: "Morning", time: "8:00 AM – 10:00 AM" },
-  { name: "Evening", time: "7:00 PM – 10:00 PM" },
-];
+const DATE_LABEL = "Friday, 6 November 2026";
+const SESSIONS = [{ name: "Evening", time: "6:00 PM onwards" }];
 
 // EVENT_SLUG is the key registrations are stored and de-duplicated against, so
 // it must stay stable for the life of the event — renaming it would let anyone
 // already registered sign up a second time. EVENT_NAME is only the label.
-const EVENT_SLUG = "parayan-2026";
-const EVENT_NAME = "Parayan 2026";
+const EVENT_SLUG = "annakoot-utsav-2026";
+const EVENT_NAME = "Annakoot Utsav 2026";
 
 const pad = (n) => String(n).padStart(2, "0");
 
@@ -102,7 +100,7 @@ function Countdown() {
           same information at a sane granularity. It has no aria-live, so it is
           only read when the region is reached. */}
       <p className="sr-only">
-        {units[0].value} days and {units[1].value} hours until the parayan
+        {units[0].value} days and {units[1].value} hours until Annakoot Utsav
         begins.
       </p>
 
@@ -173,29 +171,31 @@ const Banner = () => {
               yellow, and leading-[0.9] keeps the ascenders from opening a gap
               above the word.
 
-              The md step holds at 7xl rather than following the ramp: md is
-              where the two-column layout starts, so the text column is at its
-              narrowest there and 8xl left only ~12px of headroom — enough to
-              wrap if Cormorant fails to load and the wider Georgia fallback
-              substitutes. */}
-          <h2 className="mt-3 bg-gradient-to-br from-sand via-gold to-goldDark bg-clip-text font-display text-[4.25rem] font-semibold leading-[0.9] text-transparent drop-shadow-lg sm:text-7xl md:text-7xl lg:text-8xl xl:text-9xl">
-            Parayan
+              Sized for "Annakoot", measured in Chrome. The base step is 60px
+              because 68px came to 269px against 272px of room on a 320px
+              phone. md steps back down to 6xl: md is where the two-column
+              layout starts, so the text column is at its narrowest there
+              (~308px), and 6xl is the largest size that still fits if
+              Cormorant fails to load and the wider Georgia fallback
+              substitutes. The subline likewise waits for lg to grow. */}
+          <h2 className="mt-3 bg-gradient-to-br from-sand via-gold to-goldDark bg-clip-text font-display text-[3.75rem] font-semibold leading-[0.9] text-transparent drop-shadow-lg sm:text-7xl md:text-6xl lg:text-8xl xl:text-9xl">
+            Annakoot
           </h2>
-          <p className="mt-1 font-display text-3xl font-medium tracking-[0.35em] text-gold/90 md:text-4xl">
-            2026
+          <p className="mt-1 font-display text-3xl font-medium tracking-[0.35em] text-gold/90 lg:text-4xl">
+            Utsav 2026
           </p>
 
           <Flourish className="mx-auto mt-6 w-fit md:mx-0" />
 
           <time
-            dateTime="2026-09-05/2026-09-06"
+            dateTime="2026-11-06T18:00"
             className="mt-6 block font-display text-2xl font-medium text-white md:text-3xl"
           >
             {DATE_LABEL}
           </time>
 
-          {/* Two sessions, two pills — a single run-on line of four timestamps
-              was the hardest thing on the banner to parse at a glance. */}
+          {/* One pill per session — a single run-on line of timestamps was the
+              hardest thing on the banner to parse at a glance. */}
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2 md:justify-start">
             {SESSIONS.map((s) => (
               <span

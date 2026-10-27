@@ -208,7 +208,7 @@ last time that they're already registered.
 select created_at, full_name, mobile, reference, group_name,
        occupation, education, education_status, specialization
 from public.event_registrations
-where event_slug = 'parayan-2026'
+where event_slug = 'annakoot-utsav-2026'
 order by created_at;
 ```
 
