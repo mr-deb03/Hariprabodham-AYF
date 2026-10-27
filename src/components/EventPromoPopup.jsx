@@ -12,35 +12,22 @@ import {
 /*
  * Site-wide popup promoting Ganesh Utsav 2026.
  *
- * Once per visit: closing it — or reaching the event page by any route — is
- * remembered in sessionStorage, so it doesn't come back on every page change,
- * while a fresh visit to the site gets it again. It stops appearing on its own
- * once submissions close.
+ * Shows on every page load — a first visit, a return visit, or a refresh.
+ * Once closed, or once the event page has been reached, it stays away while
+ * the visitor moves around the site: following a menu link isn't a page load,
+ * and reappearing on every click would get in the way. It stops appearing on
+ * its own once submissions close.
  *
  * It waits for both a short delay and the poster having loaded, so a slow
  * connection never gets an empty frame that fills in a moment later.
  */
 
-const DISMISSED_KEY = "hp.promo.ganesh-utsav-2026.dismissed";
 const OPEN_DELAY_MS = 1200;
 
-// Blocked storage (private mode, strict settings) must not break the page.
-// Worst case the popup shows once per page load rather than once per visit.
-const wasDismissed = () => {
-  try {
-    return sessionStorage.getItem(DISMISSED_KEY) === "1";
-  } catch {
-    return false;
-  }
-};
-
-const markDismissed = () => {
-  try {
-    sessionStorage.setItem(DISMISSED_KEY, "1");
-  } catch {
-    /* see above */
-  }
-};
+// In memory rather than sessionStorage on purpose: a refresh wipes it, so the
+// popup comes back. Module scope rather than component state so it holds if
+// the layout remounts mid-visit, such as a trip into the portal and back.
+let dismissedThisLoad = false;
 
 // Sized from the poster's shape instead of letting the image dictate: as wide
 // as fits, but capped so poster + button always fit the viewport height. dvh
@@ -65,13 +52,13 @@ export default function EventPromoPopup() {
   const onEventPage = pathname === GANESH_UTSAV_PATH;
 
   useEffect(() => {
-    // Already on the page it advertises — count that as seen for this visit.
+    // Already on the page it advertises — no need to point there again.
     if (onEventPage) {
-      markDismissed();
+      dismissedThisLoad = true;
       setOpen(false);
       return undefined;
     }
-    if (wasDismissed() || !isSubmissionOpen()) return undefined;
+    if (dismissedThisLoad || !isSubmissionOpen()) return undefined;
 
     let cancelled = false;
     const posterLoaded = new Promise((resolve) => {
@@ -84,7 +71,7 @@ export default function EventPromoPopup() {
     const delay = new Promise((resolve) => setTimeout(resolve, OPEN_DELAY_MS));
 
     Promise.all([posterLoaded, delay]).then(([loaded]) => {
-      if (!cancelled && loaded && !wasDismissed()) setOpen(true);
+      if (!cancelled && loaded && !dismissedThisLoad) setOpen(true);
     });
     return () => {
       cancelled = true;
@@ -92,13 +79,13 @@ export default function EventPromoPopup() {
   }, [onEventPage]);
 
   const dismiss = useCallback(() => {
-    markDismissed();
+    dismissedThisLoad = true;
     setOpen(false);
   }, []);
 
   const goToEvent = () => {
     restoreFocusRef.current = false;
-    markDismissed();
+    dismissedThisLoad = true;
     setOpen(false);
     navigate(GANESH_UTSAV_PATH);
   };
