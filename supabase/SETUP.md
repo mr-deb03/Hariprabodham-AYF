@@ -203,9 +203,15 @@ registration list**. Only admins can read the table.
 needs a **new slug** — reusing an old one would tell everyone who registered
 last time that they're already registered.
 
+**Adding a field to the form.** The table needs the column **before** the
+site build that sends it goes live — until then every registration fails with
+a "column does not exist" error. Add it to `event_registrations.sql` as an
+`alter table … add column if not exists`, run that in the SQL Editor, then
+deploy. The gender field (Oct 2026) was added this way.
+
 **Exporting the list.** SQL Editor:
 ```sql
-select created_at, full_name, mobile, reference, group_name,
+select created_at, full_name, gender, mobile, reference, group_name,
        occupation, education, education_status, specialization
 from public.event_registrations
 where event_slug = 'annakoot-utsav-2026'

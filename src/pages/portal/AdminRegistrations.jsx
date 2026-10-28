@@ -18,6 +18,7 @@ import {
 import {
   EDUCATION_LEVELS,
   EDUCATION_STATUSES,
+  GENDERS,
   GROUPS,
   OCCUPATIONS,
   isValidMobile,
@@ -48,6 +49,7 @@ const PER_PAGE = 15;
 // collide with an existing registration there.
 const EDITABLE = [
   "full_name",
+  "gender",
   "mobile",
   "reference",
   "group_name",
@@ -164,7 +166,12 @@ export default function AdminRegistrations() {
     setSaving(true);
 
     const patch = Object.fromEntries(
-      EDITABLE.map((k) => [k, typeof draft[k] === "string" ? draft[k].trim() : draft[k]])
+      EDITABLE.map((k) => {
+        const v = typeof draft[k] === "string" ? draft[k].trim() : draft[k];
+        // Rows from before the form asked for gender have none. Editing such a
+        // row must leave it unset, not store an empty string.
+        return [k, k === "gender" && !v ? null : v];
+      })
     );
     const { error: err } = await supabase
       .from("event_registrations")
@@ -212,6 +219,7 @@ export default function AdminRegistrations() {
       Registered: fmtDate(r.created_at),
       Event: r.event_name,
       Name: r.full_name,
+      Gender: r.gender || "",
       Mobile: r.mobile,
       Group: r.group_name,
       Reference: r.reference,
@@ -224,7 +232,7 @@ export default function AdminRegistrations() {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(sheet);
     ws["!cols"] = [
-      { wch: 20 }, { wch: 16 }, { wch: 28 }, { wch: 15 }, { wch: 22 },
+      { wch: 20 }, { wch: 16 }, { wch: 28 }, { wch: 8 }, { wch: 15 }, { wch: 22 },
       { wch: 20 }, { wch: 12 }, { wch: 26 }, { wch: 11 }, { wch: 24 },
     ];
     XLSX.utils.book_append_sheet(wb, ws, "Registrations");
@@ -352,11 +360,12 @@ export default function AdminRegistrations() {
           </Card>
 
           <Card>
-            <TableShell minWidth="min-w-[62rem]">
+            <TableShell minWidth="min-w-[66rem]">
               <thead>
                 <tr className={tableHeadRow}>
                   <th className={thCell}>Registered</th>
                   <th className={thCell}>Name</th>
+                  <th className={thCell}>Gender</th>
                   <th className={thCell}>Mobile</th>
                   <th className={thCell}>Group</th>
                   <th className={thCell}>Reference</th>
@@ -364,7 +373,7 @@ export default function AdminRegistrations() {
                   <th className={thCell}>Education</th>
                   <th className={thCell}>Specialization</th>
                   {/* Pinned to the right edge. The table is wider than the card
-                      on anything under ~1100px, and Actions is the last of nine
+                      on anything under ~1100px, and Actions is the last of ten
                       columns — unpinned, the only destructive control on the
                       page sits off-screen behind a sideways scroll. The
                       background must be opaque or the cells it covers show
@@ -383,6 +392,10 @@ export default function AdminRegistrations() {
                       {fmtDate(r.created_at)}
                     </td>
                     <td className={`${tdCell} font-medium text-ink`}>{r.full_name}</td>
+                    {/* Blank for rows registered before the form asked. */}
+                    <td className={tdCell}>
+                      {r.gender || <span className="text-textMuted">—</span>}
+                    </td>
                     <td className={tdCell}>
                       {/* Tap-to-call: this list gets used from a phone. */}
                       <a
@@ -426,7 +439,7 @@ export default function AdminRegistrations() {
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-3 py-8 text-center text-sm text-textSoft">
+                    <td colSpan={10} className="px-3 py-8 text-center text-sm text-textSoft">
                       Nothing matches those filters.
                     </td>
                   </tr>
@@ -487,15 +500,33 @@ export default function AdminRegistrations() {
             {editing ? fmtDate(editing.created_at) : ""}
           </p>
 
-          <Field label="Youth's full name">
-            <input
-              required
-              maxLength={120}
-              className={inputClass}
-              value={draft.full_name || ""}
-              onChange={(e) => setDraft({ ...draft, full_name: e.target.value })}
-            />
-          </Field>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_10rem]">
+            <Field label="Youth's full name">
+              <input
+                required
+                maxLength={120}
+                className={inputClass}
+                value={draft.full_name || ""}
+                onChange={(e) => setDraft({ ...draft, full_name: e.target.value })}
+              />
+            </Field>
+            {/* Not required: older rows predate the question, and an admin
+                fixing a typo in one shouldn't be forced to guess a gender. */}
+            <Field label="Gender">
+              <select
+                className={inputClass}
+                value={draft.gender || ""}
+                onChange={(e) => setDraft({ ...draft, gender: e.target.value })}
+              >
+                <option value="">Not recorded</option>
+                {GENDERS.map((g) => (
+                  <option key={g} value={g}>
+                    {g}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field label="Mobile" hint="One registration per number, per event.">

@@ -24,6 +24,10 @@ create table if not exists public.event_registrations (
   mobile_key       text generated always as
                      (right(regexp_replace(mobile, '\D', '', 'g'), 10)) stored,
 
+  -- Nullable: rows from before the form asked for it have none. The form
+  -- itself always sends one.
+  gender           text,
+
   occupation       text not null,
   education        text not null,
   education_status text not null,
@@ -45,6 +49,13 @@ create table if not exists public.event_registrations (
       char_length(event_name)       between 1 and 120
     )
 );
+
+-- Added Oct 2026. `create table if not exists` skips a table that already
+-- exists, so an existing install picks the column up here instead. Run this
+-- before deploying a site build whose form sends gender — until it exists,
+-- every registration fails.
+alter table public.event_registrations
+  add column if not exists gender text;
 
 -- THE duplicate rule: one registration per mobile number per event.
 create unique index if not exists event_registrations_event_mobile_key
@@ -91,9 +102,9 @@ create policy "event_registrations admin delete"
 -- ============================================================
 --  Export a single event's registrations:
 --
---    select created_at, full_name, mobile, reference, group_name,
+--    select created_at, full_name, gender, mobile, reference, group_name,
 --           occupation, education, education_status, specialization
 --    from public.event_registrations
---    where event_slug = 'parayan-2026'
+--    where event_slug = 'annakoot-utsav-2026'
 --    order by created_at;
 -- ============================================================

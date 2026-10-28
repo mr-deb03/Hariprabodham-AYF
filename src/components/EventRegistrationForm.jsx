@@ -4,6 +4,7 @@ import { supabase, supabaseConfigured } from "../lib/supabaseClient";
 import {
   EDUCATION_LEVELS,
   EDUCATION_STATUSES,
+  GENDERS,
   GROUPS,
   OCCUPATIONS,
   isValidMobile,
@@ -24,6 +25,7 @@ import {
 const EMPTY = {
   reference: "",
   full_name: "",
+  gender: "",
   mobile: "",
   occupation: "",
   education: "",
@@ -143,8 +145,12 @@ export default function EventRegistrationForm({
 
   const submit = async (e) => {
     e.preventDefault();
-    // The two chip groups can't rely on the `required` attribute — see
+    // The chip groups can't rely on the `required` attribute — see
     // ChipGroup — so they're checked here, before the mobile format.
+    if (!form.gender) {
+      setError("Please choose a gender.");
+      return;
+    }
     if (!form.occupation) {
       setError("Please choose an occupation.");
       return;
@@ -171,6 +177,7 @@ export default function EventRegistrationForm({
       event_name: eventName,
       reference: form.reference.trim(),
       full_name: form.full_name.trim(),
+      gender: form.gender,
       mobile: form.mobile.trim(),
       occupation: form.occupation,
       education: form.education,
@@ -324,6 +331,14 @@ export default function EventRegistrationForm({
                 placeholder="First name · Middle name · Surname"
               />
             </div>
+
+            <ChipGroup
+              name="gender"
+              legend="Gender"
+              options={GENDERS}
+              value={form.gender}
+              onChange={set}
+            />
 
             <div>
               <label htmlFor="reg-mobile" className={labelClass}>

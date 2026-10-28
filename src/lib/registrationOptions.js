@@ -11,7 +11,9 @@
  * it carries VIP and PARENT, which are not mandals. Keep them separate.
  */
 
-export const OCCUPATIONS = ["Student", "Job", "Business"];
+export const GENDERS = ["Male", "Female"];
+
+export const OCCUPATIONS = ["Student", "Job", "Business", "Homemaker"];
 
 export const EDUCATION_LEVELS = [
   "VIII-IX (School)",
@@ -41,6 +43,7 @@ export const GROUPS = [
   "Suhradam (Badlapur)",
   "PrabhuDarshan (Nerul)",
   "AksharBhrahm (Rajasthan)",
+  "Sarvopari Yuvati Mandal",
   "VIP",
   "PARENT",
 ];
