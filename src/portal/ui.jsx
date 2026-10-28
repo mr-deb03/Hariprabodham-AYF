@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 // Centered overlay dialog. Closes on backdrop click or Esc.
 export function Modal({ open, onClose, title, children, maxWidth = "max-w-lg" }) {
@@ -79,6 +80,39 @@ export function Field({ label, hint, children }) {
 
 export const inputClass =
   "w-full rounded-lg border border-sand bg-white px-3 py-2 text-ink shadow-sm outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/30";
+
+/*
+ * Password input with an eye button to show or hide what's typed.
+ *
+ * Label it with htmlFor/id, not by wrapping it in Field: a button inside a
+ * <label> becomes part of the field's spoken name ("Password Show password").
+ *
+ * mousedown is cancelled so clicking the eye leaves the caret in the input;
+ * keyboard users still reach the button with Tab. Edge draws its own reveal
+ * eye on password inputs, so that one is hidden to avoid showing two.
+ */
+export function PasswordInput({ className = "", ...props }) {
+  const [shown, setShown] = useState(false);
+  return (
+    <div className="relative">
+      <input
+        {...props}
+        type={shown ? "text" : "password"}
+        className={`${inputClass} pr-11 [&::-ms-reveal]:hidden ${className}`}
+      />
+      <button
+        type="button"
+        onClick={() => setShown((s) => !s)}
+        onMouseDown={(e) => e.preventDefault()}
+        aria-label={shown ? "Hide password" : "Show password"}
+        title={shown ? "Hide password" : "Show password"}
+        className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-lg text-textMuted transition-colors hover:text-maroon focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
+      >
+        {shown ? <FaEyeSlash aria-hidden="true" /> : <FaEye aria-hidden="true" />}
+      </button>
+    </div>
+  );
+}
 
 // Standard page heading used across every portal module so titles, spacing and
 // the optional right-hand action area line up everywhere.

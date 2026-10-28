@@ -1,7 +1,14 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../portal/AuthContext";
-import { Alert, Card, Field, PortalButton, inputClass } from "../../portal/ui";
+import {
+  Alert,
+  Card,
+  Field,
+  PasswordInput,
+  PortalButton,
+  inputClass,
+} from "../../portal/ui";
 
 export default function Login() {
   const { signIn, configured } = useAuth();
@@ -48,16 +55,20 @@ export default function Login() {
             />
           </Field>
           <div>
-            <Field label="Password">
-              <input
-                type="password"
-                required
-                className={inputClass}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-              />
-            </Field>
+            {/* Not wrapped in Field — see PasswordInput for why. */}
+            <label
+              htmlFor="login-password"
+              className="mb-1 block text-left text-sm font-medium text-ink"
+            >
+              Password
+            </label>
+            <PasswordInput
+              id="login-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+            />
             <div className="mt-1.5 text-right">
               <Link
                 to="/portal/forgot-password"
