@@ -104,10 +104,15 @@ export default function AdminRegistrations() {
     return [...seen.entries()];
   }, [rows]);
 
-  const groups = useMemo(
-    () => [...new Set(rows.map((r) => r.group_name))].sort(),
-    [rows]
-  );
+  // Every group the form offers, in the form's order, so a group is listed
+  // before anyone from it has registered. Names found only on older rows (a
+  // group since renamed or removed) are kept, after the rest.
+  const groups = useMemo(() => {
+    const extra = [...new Set(rows.map((r) => r.group_name))]
+      .filter((g) => !GROUPS.includes(g))
+      .sort();
+    return [...GROUPS, ...extra];
+  }, [rows]);
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -141,14 +146,17 @@ export default function AdminRegistrations() {
   const visible = filtered.slice(start, start + PER_PAGE);
 
   // Counts per group for the filtered set — the number the team actually asks
-  // for when planning prasad and seating.
+  // for when planning prasad and seating. Every group starts at 0 so one with
+  // no sign-ups yet still shows. With a single group picked in the filter,
+  // only that group is counted; zeros for all the others would be noise.
+  // The sort is stable, so groups with equal counts keep the form's order.
   const byGroup = useMemo(() => {
-    const counts = new Map();
+    const counts = new Map((group === "all" ? groups : [group]).map((g) => [g, 0]));
     filtered.forEach((r) =>
       counts.set(r.group_name, (counts.get(r.group_name) || 0) + 1)
     );
     return [...counts.entries()].sort((a, b) => b[1] - a[1]);
-  }, [filtered]);
+  }, [filtered, groups, group]);
 
   const openEdit = (row) => {
     setFormError("");
@@ -350,7 +358,9 @@ export default function AdminRegistrations() {
                 {byGroup.map(([g, n]) => (
                   <span
                     key={g}
-                    className="rounded-full bg-cream px-3 py-1 text-xs text-ink"
+                    className={`rounded-full px-3 py-1 text-xs ${
+                      n ? "bg-cream text-ink" : "border border-sand text-textMuted"
+                    }`}
                   >
                     {g} <span className="font-semibold">{n}</span>
                   </span>
